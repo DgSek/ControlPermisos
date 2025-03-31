@@ -78,6 +78,8 @@ async function fetchAllEmployees() {
   const empleadosRef = collection(db, "empleados");
   const snapshot = await getDocs(empleadosRef);
   allEmployees = snapshot.docs.map(doc => doc.data());
+  // Ordenar alfabéticamente por "nombre"
+  allEmployees.sort((a, b) => a.nombre.localeCompare(b.nombre));
   renderEmployees(allEmployees);
 }
 
@@ -98,7 +100,9 @@ async function buscarUsuario(queryText) {
     mapUnicos.set(usuario.id_usuario, usuario);
   });
   
-  const resultadosUnicos = Array.from(mapUnicos.values());
+  let resultadosUnicos = Array.from(mapUnicos.values());
+  // Ordenar los resultados alfabéticamente por "nombre"
+  resultadosUnicos.sort((a, b) => a.nombre.localeCompare(b.nombre));
   renderEmployees(resultadosUnicos);
 }
 
@@ -162,7 +166,6 @@ function renderEmployees(employeesList) {
   });
   employeesContainer.innerHTML = html;
 }
-
 
 // Funciones para el manejo de dropdowns en el sidebar
 const toggleDropdown = (dropdown, menu, isOpen) => {
