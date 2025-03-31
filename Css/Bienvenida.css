@@ -1,0 +1,157 @@
+/* Estilos generales */
+body, html {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    height: 100%;
+    background-color: #e0e0e0;
+  }
+  
+  * {
+    box-sizing: border-box;
+  }
+  
+  .header {
+    background-color: #f1f1f1;
+    padding: 10px 0;
+    text-align: center;
+  }
+  
+  .header img {
+    width: 100%;
+    max-width: 1370px;
+    height: 130px;
+  }
+  
+  /* Estilos del navbar */
+  .navbar {
+    background-color: #002f6c;
+    padding: 15px 50px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .search-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-grow: 1;
+  }
+  
+  .search-container input[type="text"] {
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    border-radius: 30px;
+    width: 300px;
+  }
+  
+  .search-container input[type="text"]:focus {
+    outline: none;
+  }
+  
+  .search-container button {
+    background-color: transparent;
+    border: none;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+  }
+  
+  .nav-links {
+    display: flex;
+    gap: 30px;
+    margin-left: auto;
+  }
+  
+  .navbar a {
+    color: white;
+    text-decoration: none;
+    font-size: 16px;
+    padding: 10px 10px;
+  }
+  
+  .navbar a:hover {
+    text-decoration: underline;
+  }
+  
+  /* Estilo para el botón de preguntas */
+  .navbar button {
+    background-color: transparent;
+    border: none;
+    color: white;
+    font-size: 16px;
+    padding: 10px 10px;
+    cursor: pointer;
+  }
+  
+  .navbar button:hover {
+    text-decoration: underline;
+  }
+  
+  
+  .navbar .register-button {
+    background-color: #f2f2f2;
+    color: black;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .navbar .register-button:hover {
+    background-color: #ccc;
+  }
+  
+  /* Contenido de bienvenida */
+  .welcome-content {
+    text-align: center;
+    padding: 20px 10px;
+    margin: 0 auto;
+    max-width: 1000px; /* Aumentado para permitir más espacio en el texto */
+    margin-top: 50px;
+  }
+  
+  .welcome-content h1 {
+    font-size: clamp(28px, 3vw, 36px); /* Tamaño adaptable del título con un mínimo adecuado */
+    font-weight: bold;
+    color: #333;
+    margin-bottom: 20px;
+  }
+  
+  .welcome-content p {
+    font-size: clamp(18px, 2vw, 22px); /* Tamaño adaptable del párrafo con un mínimo adecuado */
+    color: #666;
+    line-height: 1.6;
+    text-align: justify;
+    max-width: 900px; /* Aumentado para permitir más texto en un solo renglón */
+    margin: 0 auto;
+  }
+  
+  /* Logo ITSPP */
+  .welcome-logo {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 20px;
+  }
+  
+  .welcome-logo img {
+    width: clamp(180px, 15vw, 250px); /* Tamaño adaptable con un mínimo y máximo mayor */
+    height: clamp(180px, 15vw, 250px); /* Mantener proporciones para que sea circular */
+    border-radius: 50%;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    float: right;
+    margin: 0 0 20px 40px; /* Mayor margen izquierdo para alinearla más a la derecha */
+  }
+  @media (max-width: 768px) {
+    .menu-lateral {
+      width: 200px; /* Reduce el tamaño del menú lateral en pantallas pequeñas */
+    }
+    .reporte-contenido {
+      margin-left: 220px;
+      width: calc(100% - 220px);
+      max-height: calc(100vh - 60px); /* Ajusta la altura en dispositivos móviles */
+    }
+  }

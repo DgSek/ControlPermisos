@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Principal Admin</title>
+  <!-- Estilos principales (contenido y grid de tarjetas) -->
+  <link rel="stylesheet" href="../Css/principalAdmin.css" />
+  <!-- Estilos específicos del Sidebar -->
+  <link rel="stylesheet" href="../Css/sidebar.css" />
+  <!-- Font Awesome y Google Fonts para iconos -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <!-- Script principal (lógica de búsqueda, renderizado y sidebar) -->
+  <script type="module" src="../JS/principalAdmin.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Sidebar (menú lateral) -->
+    <!-- Se inicia colapsado agregando la clase "collapsed" -->
+    <aside class="sidebar collapsed">
+      <header class="sidebar-header">
+        <a href="#" class="header-logo">
+          <img src="/Imagenes/logo.png" alt="Logo" />
+        </a>
+        <button class="sidebar-toggler">
+          <span class="material-symbols-rounded">chevron_left</span>
+        </button>
+      </header>
+      <nav class="sidebar-nav">
+        <ul class="nav-list primary-nav">
+          <li class="nav-item">
+            <a href="#" class="nav-link"> 
+              <span class="material-symbols-rounded">home</span>
+              <span class="nav-label">Inicio</span>
+            </a>
+            <ul class="dropdown-menu">
+              <li class="nav-item"><a class="nav-link dropdown-title">Inicio</a></li>
+            </ul>
+          </li>
+          <li class="nav-item dropdown-container">
+            <a href="#" class="nav-link dropdown-toggle">
+              <span class="material-symbols-rounded">support_agent</span>
+              <span class="nav-label">Servicios</span>
+              <span class="dropdown-icon material-symbols-rounded">keyboard_arrow_down</span>
+            </a>
+            <ul class="dropdown-menu">
+              <li class="nav-item">
+                <a href="agregarEmpleado.html" class="nav-link dropdown-link">Agregar empleado</a>
+              </li>
+              <li class="nav-item">
+                <a href="Reporte.html" class="nav-link dropdown-link">Reporte</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-item">
+            <a href="Contacto.html" class="nav-link">
+              <span class="material-symbols-rounded">contacts</span>
+              <span class="nav-label">Contacto</span>
+            </a>
+            <ul class="dropdown-menu">
+              <li class="nav-item"><a class="nav-link dropdown-title">Contacto</a></li>
+            </ul>
+          </li>
+          <li class="nav-item">
+            <a href="preguntasFrecuentes.html" class="nav-link">
+              <span class="material-symbols-rounded">help</span>
+              <span class="nav-label">Preguntas</span>
+            </a>
+            <ul class="dropdown-menu">
+              <li class="nav-item"><a class="nav-link dropdown-title">preguntasFrecuentes</a></li>
+            </ul>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <span class="material-symbols-rounded">settings</span>
+              <span class="nav-label">Ajustes</span>
+            </a>
+            <ul class="dropdown-menu">
+              <li class="nav-item"><a class="nav-link dropdown-title">Ajustes</a></li>
+            </ul>
+          </li>
+        </ul>
+        <ul class="nav-list secondary-nav">
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <span class="material-symbols-rounded">help</span>
+              <span class="nav-label">Support</span>
+            </a>
+            <ul class="dropdown-menu">
+              <li class="nav-item"><a class="nav-link dropdown-title">Support</a></li>
+            </ul>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <span class="material-symbols-rounded">logout</span>
+              <span class="nav-label">Sign Out</span>
+            </a>
+            <ul class="dropdown-menu">
+              <li class="nav-item"><a class="nav-link dropdown-title">Sign Out</a></li>
+            </ul>
+          </li>
+        </ul>
+      </nav>
+    </aside>
+
+    <!-- Botón para abrir/cerrar el sidebar (útil en móviles) -->
+    <button class="sidebar-menu-button">
+      <span class="material-symbols-rounded">menu</span>
+    </button>
+
+    <!-- Contenido principal: Buscador + Tarjetas de empleados -->
+    <div class="content-container">
+      <!-- Buscador -->
+      <div class="search-container">
+        <input type="text" placeholder="Buscar por ID de usuario o nombre" id="searchInput" />
+        <button type="submit" id="searchButton"><i class="fa fa-search"></i></button>
+        <div class="search-results" id="searchResults" style="display: none;"></div>
+      </div>
+      <!-- Grid de tarjetas de empleados -->
+      <div id="employeesContainer" class="employees-container">
+        <!-- Las tarjetas se inyectarán dinámicamente -->
+      </div>
+    </div>
+  </div>
+</body>
+</html>

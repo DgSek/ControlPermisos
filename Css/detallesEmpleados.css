@@ -1,0 +1,109 @@
+.detalles-empleados {
+    padding: 20px;
+    background-color: #f8f9fa;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .encabezado {
+    text-align: center;
+    color: #4a90e2;
+    font-size: 24px; /* Mantener tamaño original para el título */
+    margin-bottom: 20px;
+  }
+  
+  .perfil-contenedor {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  
+  .info-general {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    grid-column: span 3; /* Ocupa toda la fila en la primera sección */
+  }
+  
+  .info-general img {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 10px;
+  }
+  
+  .info-general p {
+    font-size: 18px; /* Fuente más grande para el nombre */
+    font-weight: bold;
+  }
+  
+  .info-secundaria {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .info-subseccion {
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  }
+  
+  .info-subseccion h2 {
+    font-size: 18px; /* Aumentar tamaño de los títulos */
+    color: #4a90e2;
+    border-bottom: 2px solid #e0e0e0;
+    padding-bottom: 5px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  
+  .info-subseccion p {
+    font-size: 16px; /* Aumentar tamaño de los párrafos */
+    margin: 5px 0;
+  }
+  
+  /* Botón de Solicitar Permiso */
+  .btn-solicitar-permiso {
+    background-color: #4a90e2;
+    color: white;
+    padding: 12px 24px; /* Botón más grande */
+    font-size: 18px; /* Fuente más grande */
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-top: 20px;
+    grid-column: span 3; /* Centrado y ocupa todo el ancho */
+    align-self: center;
+    transition: background-color 0.3s ease;
+  }
+  
+  .btn-solicitar-permiso:hover {
+    background-color: #357ab8;
+  }
+  
+  /* Diseño Responsivo */
+  @media (max-width: 768px) {
+    .perfil-contenedor {
+      grid-template-columns: 1fr;
+      gap: 10px;
+    }
+  
+    .info-general {
+      grid-column: span 1;
+    }
+  
+    .btn-solicitar-permiso {
+      grid-column: span 1;
+    }
+  }
+  

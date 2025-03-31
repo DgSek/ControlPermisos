@@ -1,0 +1,252 @@
+/* -------------------------------------- */
+/* RESET Y ESTILOS BASE */
+/* -------------------------------------- */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body, html {
+  font-family: 'Arial', sans-serif;
+  height: 100%;
+  background-color: white;
+  overflow-x: hidden;
+}
+.app-container {
+  display: flex;
+  gap: 20px; /* Ajusta el espacio entre el sidebar y el contenido */
+  /* Si deseas que el contenido se expanda, puedes agregar flex: 1 al contenedor de contenido */
+}
+
+/* Contenedor general para el contenido (lado derecho) */
+.content-container {
+  flex: 1;
+  padding: 20px;
+  min-width: 0;
+  position: relative;
+}
+
+/* Barra de búsqueda: centrado y responsivo */
+.search-container {
+  margin: 20px auto;
+  max-width: 500px;
+  width: 90%;
+  background-color: #fff;
+  border-radius: 30px;
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+  position: relative;
+  z-index: 1000;
+}
+
+.search-container input[type="text"] {
+  padding: 10px;
+  font-size: 16px;
+  border: none;
+  border-radius: 30px;
+  width: 100%;
+}
+
+.search-container input[type="text"]:focus {
+  outline: none;
+}
+
+.search-container button {
+  background-color: transparent;
+  border: none;
+  color: #002f6c;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.search-results {
+  background-color: white;
+  border: 1px solid #ddd;
+  border-radius: 15px;
+  max-height: 200px;
+  overflow-y: auto;
+  width: 100%;
+  max-width: 500px;
+  margin-top: 5px;
+  position: absolute;
+  top: calc(100%);
+  left: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1001;
+}
+
+.search-results .user-item {
+  padding: 12px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 16px;
+  color: #333;
+}
+
+.user-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.user-name {
+  font-weight: bold;
+  color: #333;
+  font-size: 16px;
+}
+
+.user-id {
+  color: #4d4c4c;
+  font-size: 13px;
+}
+
+.search-results .user-item button {
+  background-color: #002f6c;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.search-results .user-item button:hover {
+  background-color: #00509e;
+}
+
+/* Grid de tarjetas de empleados: Forzar filas de 4 columnas */
+.employees-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, 190px);
+  justify-content: center;
+  gap: 40px;
+  padding: 2  0px;
+  max-width: 1400px;
+  margin: 40px auto 20px auto;
+}
+
+/* TARJETAS (Cards) */
+.card {
+  width: 100%; /* ⬅️ hazla fluida, ocupará el ancho de su celda */
+  max-width: 220px; /* ⬅️ controla que no se haga enorme */
+  min-height: 254px;
+  background: #f5f5f5;
+  padding: 1.5rem 1rem;
+  border-radius: 6px;
+  box-sizing: border-box;
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.card-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.card-avatar {
+  --size: 75px;
+  background: linear-gradient(to top, #f1e1c1 0%, #fcbc97 100%);
+  width: var(--size);
+  height: var(--size);
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  margin-bottom: 1rem;
+}
+
+.card-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+}
+
+.card-social {
+  transform: translateY(200%);
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  opacity: 0;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.card-social__item {
+  list-style: none;
+}
+
+.card-social__item svg {
+  display: block;
+  height: 18px;
+  width: 18px;
+  fill: #515F65;
+  cursor: pointer;
+  transition: fill 0.2s ease, transform 0.2s ease;
+}
+
+.card-title {
+  color: #333;
+  font-size: 1em;
+  font-weight: 600;
+  line-height: 1.2em;
+  text-align: center;
+  margin-bottom: 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;       
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.card-subtitle {
+  color: #859ba8;
+  font-size: 0.8em;
+  text-align: center;
+  word-wrap: break-word;
+  white-space: normal;
+}
+
+.card-subtitle p {
+  margin: 0.3rem 0;
+  line-height: 1.2em;
+}
+
+.card:hover {
+  box-shadow: 0 8px 50px #23232333;
+}
+
+.card:hover .card-info {
+  transform: translateY(-5%);
+}
+
+.card:hover .card-social {
+  transform: translateY(100%);
+  opacity: 1;
+}
+
+.card-avatar:hover {
+  transform: scale(1.1);
+}
+
+.card-social__item svg:hover {
+  fill: #232323;
+  transform: scale(1.1);
+}
+
+/* Media queries para ajustar el grid en dispositivos */
+@media only screen and (max-width: 767px) {
+  .employees-container {
+    grid-template-columns: repeat(1, 1fr);
+  }
+}
+
+@media only screen and (min-width: 768px) and (max-width: 991px) {
+  .employees-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+

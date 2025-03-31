@@ -1,0 +1,119 @@
+/* PreguntasFrecuentes.css */
+
+.faq-container {
+    background-color: #e0e0e0;
+    font-family: 'Arial', sans-serif;
+    padding: 20px 0;
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0;
+  }
+  
+  .faq-header {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: hidden; /* Evita desbordamientos */
+    background-color: #ffffff; /* Fondo blanco para evitar espacios grises */
+  }
+  
+  .faq-header img {
+    width: 100%; /* Asegura que la imagen ocupe todo el ancho */
+    height: auto; /* Mantiene las proporciones de la imagen */
+    max-height: 100%; /* Limita la altura para que no se recorte */
+    object-fit: contain; /* Asegura que toda la imagen sea visible */
+    display: block; /* Elimina posibles espacios adicionales */
+  }
+  
+  .faq-content {
+    background-color: #ffffff;
+    padding: 30px;
+    border-radius: 8px;
+    margin: 0 auto;
+    max-width: 1200px;
+    width: 100%;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  }
+  
+  .faq-content h1 {
+    font-size: 36px;
+    color: #333;
+    text-align: left;
+    margin-bottom: 20px;
+  }
+  
+  .faq-content ol {
+    list-style-type: decimal;
+    padding-left: 20px;
+  }
+  
+  .faq-content li {
+    margin-bottom: 20px;
+    font-size: 18px;
+    color: #333;
+  }
+  
+  .faq-content p {
+    font-size: 16px;
+    color: #666;
+    margin-top: 5px;
+    text-align: left;
+  }
+  
+  /* Responsivo: Ajustes para pantallas pequeñas */
+  @media (max-width: 768px) {
+    .faq-container {
+      padding: 10px 0;
+    }
+  
+    .faq-header img {
+      width: 100%;
+      height: auto;
+      object-fit: contain; /* Se asegura de mostrar toda la imagen */
+    }
+  
+    .faq-content {
+      padding: 20px;
+      max-width: 100%;
+    }
+  
+    .faq-content h1 {
+      font-size: 28px;
+    }
+  
+    .faq-content li {
+      font-size: 16px;
+    }
+  
+    .faq-content p {
+      font-size: 14px;
+    }
+  }
+  
+  /* Responsivo: Ajustes para pantallas grandes */
+  @media (min-width: 1200px) {
+    .faq-header img {
+      max-width: 100%;
+      height: auto;
+      object-fit: contain;
+    }
+  
+    .faq-content {
+      padding: 40px;
+      max-width: 100%;
+    }
+  
+    .faq-content h1 {
+      font-size: 40px;
+    }
+  
+    .faq-content li {
+      font-size: 20px;
+    }
+  
+    .faq-content p {
+      font-size: 18px;
+    }
+  }
+  

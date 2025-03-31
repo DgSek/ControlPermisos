@@ -1,0 +1,125 @@
+/* Estilos globales */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Arial', sans-serif;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    width: 100%;
+  }
+  
+  /* Fondo específico para la pantalla de login */
+  .login-background {
+    background-image: url('https://www.puertopenasco.tecnm.mx/wp-content/uploads/2019/10/DSC_6298-1024x386.jpg');
+    backdrop-filter: blur(2px);
+    background-size: cover; /* La imagen cubrirá todo el área */
+    background-position: center; /* Centra la imagen */
+    background-repeat: no-repeat; /* Evita repeticiones */
+    width: 100vw; /* Ocupa todo el ancho de la ventana */
+    height: 100vh; /* Ocupa todo el alto de la ventana */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  
+  /* Fondo específico para la pantalla del dashboard (ejemplo) */
+  .dashboard-background {
+    background-image: url('https://via.placeholder.com/1920x1080');
+    background-size: cover;
+    background-position: center;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  /* Contenedor principal del login */
+  .login-container {
+    background: rgba(255, 255, 255, 0.3); /* Mantén la transparencia que deseas */
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 40px;
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    color: white;
+  }
+  
+  
+  
+  /* Imagen del logo */
+  .logo {
+    width: 80px;
+    margin: 0 auto 20px;
+  }
+  
+  /* Título del login */
+  .login-title {
+    font-size: 24px;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  
+  /* Input para los campos de correo y contraseña */
+  .login-input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    background-color: rgba(255, 255, 255, 0.3);
+    color: white;
+  }
+  
+  .login-input::placeholder {
+    color: #ddd;
+  }
+  
+  /* Botón de inicio de sesión */
+  .login-button {
+    width: 100%;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    margin-top: 10px;
+  }
+  
+  .login-button:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Link de "Forgot Password" */
+  .forgot-password {
+    margin-top: 15px;
+    font-size: 14px;
+    color: white;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+  
+  .forgot-password:hover {
+    color: #ddd;
+  }
+  @media (max-width: 768px) {
+    .menu-lateral {
+      width: 200px; /* Reduce el tamaño del menú lateral en pantallas pequeñas */
+    }
+    .reporte-contenido {
+      margin-left: 220px;
+      width: calc(100% - 220px);
+      max-height: calc(100vh - 60px); /* Ajusta la altura en dispositivos móviles */
+    }
+  }
