@@ -1,11 +1,52 @@
-// Importa Firebase y la biblioteca XLSX desde CDN
 import { db } from '../BD/firebaseConfig.js';
 import { collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 import * as XLSX from 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-  // Variables de estado
-  let activeMenu = null;
+  // -----------------------------
+  // Funcionalidad del Sidebar Global (estática)
+  // -----------------------------
+  const toggleDropdown = (dropdown, menu, isOpen) => {
+    dropdown.classList.toggle("open", isOpen);
+    menu.style.height = isOpen ? `${menu.scrollHeight}px` : 0;
+  };
+
+  const closeAllDropdowns = () => {
+    document.querySelectorAll(".dropdown-container.open").forEach((openDropdown) => {
+      const menu = openDropdown.querySelector(".dropdown-menu");
+      toggleDropdown(openDropdown, menu, false);
+    });
+  };
+
+  // Abrir/cerrar el sidebar
+  document.querySelectorAll(".sidebar-toggler, .sidebar-menu-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      closeAllDropdowns();
+      document.querySelector(".sidebar").classList.toggle("collapsed");
+    });
+  });
+
+  // Enlazar eventos de click a los dropdown-toggle (en modo expandido)
+  function bindDropdownToggles() {
+    document.querySelectorAll(".dropdown-toggle").forEach((dropdownToggle) => {
+      dropdownToggle.addEventListener("click", (e) => {
+        e.preventDefault();
+        const dropdown = dropdownToggle.closest(".dropdown-container");
+        const menu = dropdown.querySelector(".dropdown-menu");
+        const isOpen = dropdown.classList.contains("open");
+        closeAllDropdowns();
+        toggleDropdown(dropdown, menu, !isOpen);
+      });
+    });
+  }
+
+  if (window.innerWidth <= 1024) {
+    document.querySelector(".sidebar").classList.add("collapsed");
+  }
+
+  // -----------------------------
+  // Funcionalidad del Reporte (consultas, renderizado, etc.)
+  // -----------------------------
   let solicitudes = [];
   let todasLasSolicitudes = [];
   let tituloReporte = 'Seleccione "General" para ver el reporte de permisos.';
@@ -14,11 +55,9 @@ document.addEventListener('DOMContentLoaded', () => {
   let fechaInicio = "";
   let fechaFin = "";
 
-  // Referencias a elementos DOM
-  const menuLateralEl = document.getElementById('menu-lateral');
+  const primaryMenuEl = document.getElementById('primary-menu');
   const reporteContenidoEl = document.getElementById('reporte-contenido');
 
-  // Códigos de áreas y departamentos
   const areaCodes = {
     'Dirección General': 'A1',
     'Subdirección de planeación y vinculación': 'A2',
@@ -28,7 +67,10 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const departmentCodes = {
-    'Dirección General': { 'Dirección General': '01', 'Innovación y calidad': '02' },
+    'Dirección General': {
+      'Dirección General': '01',
+      'Innovación y calidad': '02'
+    },
     'Subdirección de planeación y vinculación': {
       'Subdirección de planeación y vinculación': '01',
       'Departamento de servicios escolares': '02',
@@ -64,15 +106,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   };
 
-  // --- Funciones de Lógica ---
-
-  // Alterna el menú activo
-  function toggleMenu(menu) {
-    activeMenu = (activeMenu === menu) ? null : menu;
-    renderMenu();
-  }
-
-  // Extrae los números de empleado a partir de id_permiso (se asume formato "CODIGO-numero")
   function extractEmployeeNumbers(solicitudesList) {
     return solicitudesList.map(solicitud => {
       const parts = solicitud.id_permiso.split('-');
@@ -80,7 +113,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Consulta la colección "empleados" y filtra según los números extraídos
   async function fetchEmployees(employeeNumbers) {
     try {
       const empleadosRef = collection(db, 'empleados');
@@ -89,13 +121,12 @@ document.addEventListener('DOMContentLoaded', () => {
         .map(doc => doc.data())
         .filter(empleado => empleado.id_usuario && employeeNumbers.includes(empleado.id_usuario.toString()));
       empleados = empleadosData;
-      renderReporteContent(); // Actualiza el combobox y los nuevos reportes estadísticos
+      renderReporteContent();
     } catch (error) {
       console.error("Error obteniendo empleados: ", error);
     }
   }
 
-  // Consulta la colección "solicitud" según área y (opcional) departamento
   async function fetchSolicitudes(areaCode, departmentCode = null) {
     try {
       const solicitudesRef = collection(db, 'solicitud');
@@ -131,7 +162,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Maneja el clic en "General" de un área
   async function handleGeneralClick(area) {
     const areaCode = areaCodes[area];
     const solicitudesData = await fetchSolicitudes(areaCode);
@@ -146,7 +176,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderReporteContent();
   }
 
-  // Maneja el clic en un departamento específico
   async function handleDepartmentClick(area, department) {
     const areaCode = areaCodes[area];
     const departmentCode = departmentCodes[area] ? departmentCodes[area][department] : null;
@@ -162,7 +191,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderReporteContent();
   }
 
-  // Actualiza la selección de empleado y filtra las solicitudes
   function handleEmployeeSelection(e) {
     empleadoSeleccionado = e.target.value;
     if (empleadoSeleccionado === "") {
@@ -175,7 +203,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderReporteContent();
   }
 
-  // Filtra las solicitudes por rango de fechas
   function handleFiltrarPorFecha() {
     const fechaInicioInput = document.getElementById('fechaInicio').value;
     const fechaFinInput = document.getElementById('fechaFin').value;
@@ -195,7 +222,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderReporteContent();
   }
 
-  // Exporta los datos actuales a un archivo Excel
   function exportToExcel() {
     if (!solicitudes || solicitudes.length === 0) {
       alert("No hay datos para exportar.");
@@ -207,123 +233,159 @@ document.addEventListener('DOMContentLoaded', () => {
     XLSX.writeFile(workbook, "reporte_permisos.xlsx");
   }
 
-  // --- Funciones de Renderizado ---
-
-  // Renderiza el menú lateral
-  function renderMenu() {
-    let html = `
-      <div class="menu-logo">
-        <h2>Reportes</h2>
-      </div>
-      <ul class="menu-items">
-    `;
+  // --- Renderizar el menú principal (áreas + departamentos) ---
+  function renderPrimaryMenu() {
+    let html = '';
     for (const area in areaCodes) {
-      html += `<li class="menu-item" onclick="menuClickHandler('${area}')">
-                 ${area}
-                 ${activeMenu === area ? renderSubmenu(area) : ''}
-               </li>`;
-    }
-    html += `</ul>`;
-    menuLateralEl.innerHTML = html;
-  }
-
-  // Renderiza el submenú (opciones "General" y departamentos) para un área
-  function renderSubmenu(area) {
-    let submenuHtml = `<ul class="submenu">`;
-    submenuHtml += `<li>
-                      <button onclick="generalClickHandler('${area}')" class="submenu-button">
-                        General
-                      </button>
-                    </li>`;
-    if (departmentCodes[area]) {
-      for (const department in departmentCodes[area]) {
-        submenuHtml += `<li>
-                          <button onclick="departmentClickHandler('${area}', '${department}')" class="submenu-button">
-                            ${department}
-                          </button>
-                        </li>`;
+      html += `
+        <li class="nav-item dropdown-container">
+          <a href="#" class="nav-link dropdown-toggle">
+            <span class="material-symbols-rounded">folder</span>
+            <span class="nav-label">${area}</span>
+            <span class="dropdown-icon material-symbols-rounded">keyboard_arrow_down</span>
+          </a>
+          <ul class="dropdown-menu">
+            <li class="nav-item">
+              <a href="#" class="nav-link dropdown-link" onclick="generalClickHandler('${area}')">
+                General
+              </a>
+            </li>
+      `;
+      if (departmentCodes[area]) {
+        for (const department in departmentCodes[area]) {
+          html += `
+            <li class="nav-item">
+              <a href="#" class="nav-link dropdown-link"
+                 onclick="departmentClickHandler('${area}', '${department}')">
+                ${department}
+              </a>
+            </li>
+          `;
+        }
       }
+      html += `
+          </ul>
+        </li>
+      `;
     }
-    submenuHtml += `</ul>`;
-    return submenuHtml;
+    primaryMenuEl.innerHTML = html;
+    bindDropdownToggles();
   }
 
-  // Renderiza el contenido del reporte (título, combobox, filtros, lista de solicitudes, botón de exportar y sección de reportes estadísticos)
+  // --- Renderizar el contenido del reporte (con mejoras en el área de gráficas) ---
   function renderReporteContent() {
     let html = `<h3>${tituloReporte}</h3>`;
-    // Combobox de empleados
-    html += `<div class="combobox-container">
-               <label for="empleados-select">Seleccione un empleado:</label>
-               <select id="empleados-select" onchange="employeeSelectionHandler(event)">
-                 <option value="">-- Todos los empleados --</option>`;
+    html += `
+      <div class="combobox-container">
+        <label for="empleados-select">Seleccione un empleado:</label>
+        <select id="empleados-select" onchange="employeeSelectionHandler(event)">
+          <option value="">-- Todos los empleados --</option>
+    `;
     empleados.forEach(empleado => {
-      html += `<option value="${empleado.id_usuario}" ${empleadoSeleccionado === empleado.id_usuario ? 'selected' : ''}>
-                 ${empleado.nombre}
-               </option>`;
+      html += `
+          <option value="${empleado.id_usuario}" ${empleadoSeleccionado === empleado.id_usuario ? 'selected' : ''}>
+            ${empleado.nombre}
+          </option>
+      `;
     });
-    html += `</select>
-             </div>`;
-    // Filtros por fecha
-    html += `<div class="filtros-container">
-               <label for="fechaInicio">Fecha Inicio:</label>
-               <input type="date" id="fechaInicio" value="${fechaInicio}">
-               <label for="fechaFin">Fecha Fin:</label>
-               <input type="date" id="fechaFin" value="${fechaFin}">
-               <button onclick="filtrarPorFechaHandler()" class="filtrar-button">Filtrar por Fecha</button>
-             </div>`;
-    // Lista de solicitudes
+    html += `
+        </select>
+      </div>
+      <div class="filtros-container">
+        <label for="fechaInicio">Fecha Inicio:</label>
+        <input type="date" id="fechaInicio" value="${fechaInicio}">
+        <label for="fechaFin">Fecha Fin:</label>
+        <input type="date" id="fechaFin" value="${fechaFin}">
+        <button onclick="filtrarPorFechaHandler()" class="filtrar-button">
+          Filtrar por Fecha
+        </button>
+      </div>
+    `;
+
     if (solicitudes && solicitudes.length > 0) {
       html += `<ul class="solicitudes-lista">`;
       solicitudes.forEach(solicitud => {
-        html += `<li class="solicitud-item">
-                   <p><strong>Nombre Empleado:</strong> ${solicitud.nombre_empleado}</p>
-                   <p><strong>Motivo Falta:</strong> ${solicitud.motivo_falta}</p>
-                   <p><strong>Fecha Solicitud:</strong> ${solicitud.fecha_solicitud}</p>
-                   <p><strong>Tipo Permiso:</strong> ${solicitud.tipo_permiso}</p>
-                   <p><strong>Horario Laboral:</strong> ${solicitud.horario_laboral}</p>
-                   <p><strong>Nombre Jefe Autoriza:</strong> ${solicitud.jefe_autoriza_permiso}</p>
-                   <p><strong>Puesto Empleado:</strong> ${solicitud.puesto_empleado}</p>
-                 </li>`;
+        html += `
+          <li class="solicitud-item">
+            <p><strong>Nombre Empleado:</strong> ${solicitud.nombre_empleado}</p>
+            <p><strong>Motivo Falta:</strong> ${solicitud.motivo_falta}</p>
+            <p><strong>Fecha Solicitud:</strong> ${solicitud.fecha_solicitud}</p>
+            <p><strong>Tipo Permiso:</strong> ${solicitud.tipo_permiso}</p>
+            <p><strong>Horario Laboral:</strong> ${solicitud.horario_laboral}</p>
+            <p><strong>Nombre Jefe Autoriza:</strong> ${solicitud.jefe_autoriza_permiso}</p>
+            <p><strong>Puesto Empleado:</strong> ${solicitud.puesto_empleado}</p>
+          </li>
+        `;
       });
       html += `</ul>`;
     } else {
-      html += `<p class="mensaje-no-solicitudes">No se encontraron solicitudes en el rango de fechas seleccionado.</p>`;
+      html += `
+        <p class="mensaje-no-solicitudes">
+          No se encontraron solicitudes en el rango de fechas seleccionado.
+        </p>
+      `;
     }
-    // Botón de exportar a Excel
-    html += `<button onclick="exportToExcelHandler()" class="export-button">Exportar a Excel</button>`;
-    
-    // --- Nueva Sección: Reportes Estadísticos ---
+
     html += `
-      <div id="statistical-reports">
-        <h3>Reportes Estadísticos</h3>
-        <section id="reporte-area">
-          <h4>Reporte por Área</h4>
-          <canvas id="chartArea" width="400" height="400"></canvas>
-        </section>
-        <section id="reporte-departamento">
-          <h4>Reporte por Departamento</h4>
-          <canvas id="chartDepartment" width="400" height="400"></canvas>
-        </section>
-        <section id="reporte-individual">
-          <h4>Reporte Individual</h4>
-          <label for="empleadoSelectChart">Seleccione un empleado:</label>
-          <select id="empleadoSelectChart">
-            <option value="">-- Seleccione --</option>
-          </select>
-          <canvas id="chartIndividual" width="400" height="400"></canvas>
-        </section>
+      <button onclick="exportToExcelHandler()" class="export-button">
+        Exportar a Excel
+      </button>
+    `;
+
+    // Sección de gráficas organizada en tarjetas
+    html += `
+      <div class="charts-section">
+        <div class="row">
+          <!-- Tarjeta para la gráfica de Pie (Reporte por Área) -->
+          <div class="col-md-6">
+            <div class="card chart-card">
+              <div class="card-header chart-header-pie">
+                <h4>Pie Chart</h4>
+              </div>
+              <div class="card-body">
+                <canvas id="chartArea" width="400" height="400"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tarjeta para la gráfica de Barras (Reporte por Departamento) -->
+          <div class="col-md-6">
+            <div class="card chart-card">
+              <div class="card-header chart-header-bar">
+                <h4>Stacked Bar Chart</h4>
+              </div>
+              <div class="card-body">
+                <canvas id="chartDepartment" width="400" height="400"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Segunda fila: Gráfica Individual -->
+        <div class="row" style="margin-top: 1rem;">
+          <div class="col-md-12">
+            <div class="card chart-card">
+              <div class="card-header chart-header-individual">
+                <h4>Reporte Individual</h4>
+              </div>
+              <div class="card-body">
+                <label for="empleadoSelectChart">Seleccione un empleado:</label>
+                <select id="empleadoSelectChart">
+                  <option value="">-- Seleccione --</option>
+                </select>
+                <canvas id="chartIndividual" width="400" height="400"></canvas>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     `;
-    
+
     reporteContenidoEl.innerHTML = html;
-    
-    // Inicializa los reportes estadísticos
     initStatisticalReports();
   }
 
   // --- Funciones de Reportes Estadísticos ---
-
-  // Función para determinar el área a partir del id_permiso
   function getAreaFromIdPermiso(id_permiso) {
     for (const [area, code] of Object.entries(areaCodes)) {
       if (id_permiso.startsWith(code)) {
@@ -333,7 +395,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return "Desconocido";
   }
 
-  // Función para determinar el departamento a partir del id_permiso
   function getDepartmentFromIdPermiso(id_permiso) {
     for (const [area, deptMapping] of Object.entries(departmentCodes)) {
       const areaCode = areaCodes[area];
@@ -349,7 +410,6 @@ document.addEventListener('DOMContentLoaded', () => {
     return "Desconocido";
   }
 
-  // Genera datos para el reporte por área
   function generateAreaReport(data) {
     const areaCounts = {};
     data.forEach(item => {
@@ -362,7 +422,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  // Genera datos para el reporte por departamento
   function generateDepartmentReport(data) {
     const deptCounts = {};
     data.forEach(item => {
@@ -375,17 +434,15 @@ document.addEventListener('DOMContentLoaded', () => {
     };
   }
 
-  // Genera datos para el reporte individual (agrupado por mes)
   function generateIndividualReport(data, empleadoId) {
     const monthlyCounts = {};
     data.forEach(item => {
       const parts = item.id_permiso.split('-');
-      if (parts.length < 2) return; // Verifica que el formato sea el esperado
+      if (parts.length < 2) return;
       const empNum = parseInt(parts[1], 10);
       if (empNum === parseInt(empleadoId, 10)) {
-        // Verifica que exista fecha_solicitud y sea una cadena
         if (item.fecha_solicitud && typeof item.fecha_solicitud === 'string') {
-          const month = item.fecha_solicitud.substr(5, 2); // Extrae el mes (MM)
+          const month = item.fecha_solicitud.substr(5, 2);
           monthlyCounts[month] = (monthlyCounts[month] || 0) + 1;
         }
       }
@@ -393,9 +450,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const labels = Object.keys(monthlyCounts).sort();
     const values = labels.map(label => monthlyCounts[label]);
     return { labels, values };
-  }   
+  }
 
-  // Función para crear un gráfico de pastel
   function createPieChart(ctx, labels, data) {
     return new Chart(ctx, {
       type: 'pie',
@@ -403,14 +459,16 @@ document.addEventListener('DOMContentLoaded', () => {
         labels: labels,
         datasets: [{
           data: data,
-          backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#66FF66', '#FF6666']
+          backgroundColor: [
+            '#FF6384', '#36A2EB', '#FFCE56',
+            '#4BC0C0', '#9966FF', '#66FF66', '#FF6666'
+          ]
         }]
       },
       options: {}
     });
   }
 
-  // Función para crear un gráfico de barras
   function createBarChart(ctx, labels, data) {
     return new Chart(ctx, {
       type: 'bar',
@@ -432,16 +490,14 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  let individualChart; // Variable global para el gráfico individual
+  let individualChart;
 
-  // Actualiza o crea el gráfico individual según el empleado seleccionado
   function updateIndividualChart(empleadoId) {
     const ctxIndiv = document.getElementById('chartIndividual').getContext('2d');
     if (individualChart) {
       individualChart.destroy();
     }
     if (!empleadoId) {
-      // Si no se selecciona empleado, se limpia el canvas
       ctxIndiv.clearRect(0, 0, ctxIndiv.canvas.width, ctxIndiv.canvas.height);
       return;
     }
@@ -449,12 +505,7 @@ document.addEventListener('DOMContentLoaded', () => {
     individualChart = createBarChart(ctxIndiv, indivReportData.labels, indivReportData.values);
   }
 
-  // Inicializa la sección de reportes estadísticos
   function initStatisticalReports() {
-    const statContainer = document.getElementById('statistical-reports');
-    if (!statContainer) return;
-
-    // Inicializa el combobox para el reporte individual
     const selectEl = document.getElementById('empleadoSelectChart');
     if (selectEl) {
       selectEl.innerHTML = `<option value="">-- Seleccione --</option>`;
@@ -465,28 +516,18 @@ document.addEventListener('DOMContentLoaded', () => {
         updateIndividualChart(selectEl.value);
       });
     }
-
     if (todasLasSolicitudes && todasLasSolicitudes.length > 0) {
-      // Reporte por Área
       const areaReportData = generateAreaReport(todasLasSolicitudes);
       const ctxArea = document.getElementById('chartArea').getContext('2d');
       createPieChart(ctxArea, areaReportData.labels, areaReportData.values);
-
-      // Reporte por Departamento
       const deptReportData = generateDepartmentReport(todasLasSolicitudes);
       const ctxDept = document.getElementById('chartDepartment').getContext('2d');
       createPieChart(ctxDept, deptReportData.labels, deptReportData.values);
-
-      // Reporte Individual: inicializa con la opción seleccionada (si la hay)
       updateIndividualChart(selectEl.value);
     }
   }
 
-  // --- Exponemos funciones para los manejadores inline ---
-  window.menuClickHandler = (area) => {
-    toggleMenu(area);
-  };
-
+  // --- Exponer funciones para los manejadores inline ---
   window.generalClickHandler = (area) => {
     handleGeneralClick(area);
   };
@@ -507,7 +548,76 @@ document.addEventListener('DOMContentLoaded', () => {
     exportToExcel();
   };
 
-  // Renderizado inicial
-  renderMenu();
+  // Renderizados iniciales
+  renderPrimaryMenu();
   renderReporteContent();
+
+  // -----------------------------
+  // SOLUCIÓN DINÁMICA: Portal para submenús en modo colapsado
+  // -----------------------------
+  let portal = document.getElementById("portal-submenu");
+  if (!portal) {
+    portal = document.createElement("div");
+    portal.id = "portal-submenu";
+    portal.style.position = "fixed";
+    portal.style.top = "0";
+    portal.style.left = "0";
+    portal.style.width = "100%";
+    portal.style.height = "100%";
+    portal.style.pointerEvents = "none";
+    document.body.appendChild(portal);
+  }
+
+  document.querySelectorAll(".dropdown-container").forEach((container) => {
+    const submenu = container.querySelector(".dropdown-menu");
+    const portalDropdown = document.createElement("div");
+    portalDropdown.className = "portal-dropdown";
+    const clonedMenu = submenu.cloneNode(true);
+    clonedMenu.style.display = "block";
+    portalDropdown.appendChild(clonedMenu);
+    portalDropdown.style.position = "fixed";
+    portalDropdown.style.display = "none";
+    portalDropdown.style.pointerEvents = "auto";
+    portal.appendChild(portalDropdown);
+
+    let hideTimeout;
+    const showDropdown = () => {
+      if (!document.querySelector(".sidebar").classList.contains("collapsed")) return;
+      const rect = container.getBoundingClientRect();
+      let leftPos = rect.right - 2;
+      let topPos = rect.top;
+      portalDropdown.style.display = "block";
+      const ddWidth = portalDropdown.offsetWidth;
+      const ddHeight = portalDropdown.offsetHeight;
+      if (leftPos + ddWidth > window.innerWidth) {
+        leftPos = rect.left - ddWidth + 2;
+        if (leftPos < 0) leftPos = 0;
+      }
+      if (topPos + ddHeight > window.innerHeight) {
+        topPos = window.innerHeight - ddHeight - 10;
+        if (topPos < 0) topPos = 0;
+      }
+      portalDropdown.style.left = leftPos + "px";
+      portalDropdown.style.top = topPos + "px";
+      portalDropdown.style.display = "block";
+    };
+    const hideDropdown = () => {
+      portalDropdown.style.display = "none";
+    };
+
+    container.addEventListener("mouseenter", () => {
+      clearTimeout(hideTimeout);
+      showDropdown();
+    });
+    container.addEventListener("mouseleave", () => {
+      hideTimeout = setTimeout(hideDropdown, 200);
+    });
+    portalDropdown.addEventListener("mouseenter", () => {
+      clearTimeout(hideTimeout);
+      showDropdown();
+    });
+    portalDropdown.addEventListener("mouseleave", () => {
+      hideTimeout = setTimeout(hideDropdown, 200);
+    });
+  });
 });

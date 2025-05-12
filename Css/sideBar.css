@@ -1,6 +1,7 @@
 /* Importing Google Fonts - Poppins */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
+/* Reset y estilos globales */
 * {
   margin: 0;
   padding: 0;
@@ -13,20 +14,24 @@ body {
   background: linear-gradient(#F1F3FF, #CBD4FF);
 }
 
+/* ===============================
+   Estilos del Sidebar (Original)
+================================== */
 .sidebar {
   position: fixed;
   top: 0;
   left: 0;
-  z-index: 9999; /* Valor alto para asegurarse que esté encima de todo */
+  z-index: 9999; /* Para que esté por encima de otros elementos */
   width: 270px;
   height: 100vh;
   background: #151A2D;
-  transition: all 0.4s ease;
+  transition: width 0.4s ease;
+  overflow: visible; /* Permite que los submenús se muestren sin recortarse */
 }
 
-
 .sidebar.collapsed {
-  width: 85px;
+  width: 85px;    /* Ancho cuando está colapsado */
+  overflow: visible;
 }
 
 .sidebar .sidebar-header {
@@ -81,6 +86,7 @@ body {
   background: #d9e1fd;
 }
 
+/* Lista principal del sidebar */
 .sidebar-nav .nav-list {
   list-style: none;
   display: flex;
@@ -91,6 +97,7 @@ body {
   transition: 0.4s ease;
 }
 
+/* Si el contenido excede la pantalla, el sidebar hace scroll vertical */
 .sidebar .sidebar-nav .primary-nav {
   overflow-y: auto;
   scrollbar-width: thin;
@@ -108,6 +115,7 @@ body {
   transform: translateY(65px);
 }
 
+/* Estilo de los enlaces de la lista */
 .sidebar-nav .nav-item .nav-link {
   color: #fff;
   display: flex;
@@ -121,15 +129,19 @@ body {
   transition: 0.4s ease;
 }
 
-.sidebar-nav .nav-item:is(:hover, .open)>.nav-link:not(.dropdown-title) {
+.sidebar-nav .nav-item:is(:hover, .open) > .nav-link:not(.dropdown-title) {
   color: #151A2D;
   background: #EEF2FF;
 }
 
+/* Permitir salto de línea en los nombres largos */
 .sidebar .nav-link .nav-label {
+  white-space: normal;
+  overflow-wrap: break-word;
   transition: opacity 0.3s ease;
 }
 
+/* En modo colapsado, se ocultan los textos */
 .sidebar.collapsed .nav-link :where(.nav-label, .dropdown-icon) {
   opacity: 0;
   pointer-events: none;
@@ -139,6 +151,7 @@ body {
   transition: opacity 0.3s 0s ease;
 }
 
+/* Sección secundaria (Support, Sign Out) */
 .sidebar-nav .secondary-nav {
   position: absolute;
   bottom: 35px;
@@ -150,77 +163,159 @@ body {
   position: relative;
 }
 
-/* Dropdown Stylings */
+/* --------- Dropdowns (submenús) --------- */
+
+/* Flecha del dropdown */
 .sidebar-nav .dropdown-container .dropdown-icon {
   margin: 0 -4px 0 auto;
   transition: transform 0.4s ease, opacity 0.3s 0.2s ease;
 }
-
 .sidebar-nav .dropdown-container.open .dropdown-icon {
   transform: rotate(180deg);
 }
 
+/* Submenú inicialmente cerrado */
 .sidebar-nav .dropdown-menu {
   height: 0;
-  overflow-y: hidden;
-  list-style: none;
-  padding-left: 15px;
+  overflow: hidden;
   transition: height 0.4s ease;
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
+/* Submenú expandido */
+.sidebar-nav .dropdown-container.open .dropdown-menu {
+  height: auto;
+  overflow: visible;
+}
+
+/* Modo colapsado (hover): submenú a la derecha del nav-item */
 .sidebar.collapsed .dropdown-menu {
   position: absolute;
-  top: -10px;
+  top: 0;
   left: 100%;
   opacity: 0;
   height: auto !important;
-  padding-right: 10px;
-  overflow-y: unset;
   pointer-events: none;
   border-radius: 0 10px 10px 0;
   background: #151A2D;
-  transition: 0s;
+  transition: opacity 0.3s ease;
+  width: auto;
+  min-width: 240px;
+  max-width: 320px;
+  white-space: normal;
+  overflow-wrap: break-word;
+  z-index: 9999;
 }
 
-.sidebar.collapsed .dropdown-menu:has(.dropdown-link) {
-  padding: 7px 10px 7px 24px;
-}
-
-.sidebar.sidebar.collapsed .nav-item:hover>.dropdown-menu {
+.sidebar.sidebar.collapsed .nav-item:hover > .dropdown-menu {
   opacity: 1;
   pointer-events: auto;
-  transform: translateY(12px);
-  transition: all 0.4s ease;
 }
 
-.sidebar.sidebar.collapsed .nav-item:hover>.dropdown-menu:has(.dropdown-link) {
-  transform: translateY(10px);
-}
-
+/* Enlaces dentro del submenú */
 .dropdown-menu .nav-item .nav-link {
   color: #F1F4FF;
   padding: 9px 15px;
+  white-space: normal;
+  overflow-wrap: break-word;
+  font-size: 14px;
 }
 
 .sidebar.collapsed .dropdown-menu .nav-link {
   padding: 7px 15px;
 }
 
+/* Ocultar .dropdown-title */
 .dropdown-menu .nav-item .nav-link.dropdown-title {
   display: none;
   color: #fff;
   padding: 9px 15px;
 }
-
 .dropdown-menu:has(.dropdown-link) .nav-item .dropdown-title {
   font-weight: 500;
   padding: 7px 15px;
 }
-
 .sidebar.collapsed .dropdown-menu .nav-item .dropdown-title {
   display: block;
 }
 
+/* Botón de menú para móviles */
 .sidebar-menu-button {
   display: none;
+}
+
+/* ================================
+   Portal de Submenús (modo colapsado)
+=================================== */
+#portal-submenu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 99999;
+}
+
+.portal-dropdown {
+  position: fixed;
+  background: #151A2D;
+  color: #F1F4FF;
+  border: none;
+  border-radius: 0 8px 8px 0;
+  box-shadow: none;
+  pointer-events: auto;
+  padding: 5px;
+  z-index: 100000;
+  display: none;
+  width: auto;
+  min-width: 240px;
+  max-width: 320px;
+  white-space: normal;
+  overflow-wrap: break-word;
+}
+
+.portal-dropdown ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.portal-dropdown li {
+  margin: 0;
+}
+
+.portal-dropdown a {
+  display: block;
+  color: #F1F4FF;
+  text-decoration: none;
+  padding: 8px 12px;
+  transition: 0.4s ease;
+}
+
+.portal-dropdown a:hover {
+  color: #151A2D !important;
+  background: #EEF2FF !important;
+  border-radius: 8px;
+}
+
+/* ================================
+   Contenedor principal (a la derecha)
+   (Sidebar fixed, por lo que se utiliza margin-left)
+=================================== */
+.content-container {
+  margin-left: 270px;               /* Ancho normal del sidebar */
+  width: calc(100% - 270px);         /* Resto de la pantalla */
+  min-height: 100vh;
+  background: #f9f9f9;
+  padding: 20px 20px 20px 0;         /* Sin padding a la izquierda para aprovechar el espacio */
+  transition: margin-left 0.4s ease, width 0.4s ease;
+  box-sizing: border-box;
+}
+
+.sidebar.collapsed ~ .content-container {
+  margin-left: 85px;
+  width: calc(100% - 85px);
 }

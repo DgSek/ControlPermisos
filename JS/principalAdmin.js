@@ -1,15 +1,16 @@
+// IMPORTACIONES DE FIREBASE Y MÉTODOS DE FIRESTORE
 import { db } from '../BD/firebaseConfig.js';
 import { collection, doc, getDoc, getDocs, query, where, updateDoc, addDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 
-// Variables globales para el listado de empleados y mapeos
+// VARIABLES GLOBALES PARA GESTIONAR EMPLEADOS Y SOLICITUDES
 let allEmployees = [];
 let areaMap = {};
 let deptMap = {};
-
-// Variable para almacenar el id del documento del empleado actual (para actualizar)
 let currentEmployeeDocId = null;
+let currentEmpSolicitud = null; // Almacena el empleado seleccionado para la solicitud
+let archivosAdjuntos = [];     // Almacena los archivos seleccionados en la solicitud
 
-// Constantes para áreas y departamentos (usadas en el modal)
+// CONSTANTES DE ÁREAS Y DEPARTAMENTOS
 const areaCodes = {
   'Dirección General': 'A1',
   'Subdirección de planeación y vinculación': 'A2',
@@ -58,73 +59,10 @@ const departmentCodes = {
   },
 };
 
-// Elemento contenedor del listado de empleados
+// ELEMENTOS DEL DOM
 const employeesContainer = document.getElementById('employeesContainer');
 
-// Función para poblar el select de áreas en el modal
-function populateAreaSelect() {
-  const selectArea = document.getElementById('areaSeleccionada');
-  if (!selectArea) return;
-  selectArea.innerHTML = '<option value="">Seleccione un área</option>';
-  Object.keys(areaCodes).forEach(areaName => {
-    const option = document.createElement('option');
-    option.value = areaName; // Usamos el nombre para facilitar la comparación
-    option.textContent = areaName;
-    selectArea.appendChild(option);
-  });
-}
-
-document.addEventListener('DOMContentLoaded', async () => {
-  // Si el modal existe, poblar el select de área
-  if (document.getElementById('areaSeleccionada')) {
-    populateAreaSelect();
-  }
-  
-  // Carga de mapeos y listado de empleados
-  await fetchAreaMap();
-  await fetchDeptMap();
-  await fetchAllEmployees();
-
-  // Eventos para el buscador del listado de empleados
-  const searchInput = document.getElementById('searchInput');
-  const searchButton = document.getElementById('searchButton');
-  searchInput.addEventListener('input', handleSearch);
-  searchButton.addEventListener('click', handleSearch);
-
-  // Actualiza el select de departamentos en el modal al cambiar el área
-  const selectAreaModal = document.getElementById('areaSeleccionada');
-  if (selectAreaModal) {
-    selectAreaModal.addEventListener('change', actualizarDepartamentoModal);
-  }
-
-  // Función para ver detalles (redirige a otra página)
-  window.verDetalles = function (idUsuario) {
-    window.location.href = `detallesEmpleados.html?id_usuario=${idUsuario}`;
-  };
-
-  // Eventos para el sidebar y dropdowns
-  document.querySelectorAll(".sidebar-toggler, .sidebar-menu-button").forEach((button) => {
-    button.addEventListener("click", () => {
-      closeAllDropdowns();
-      document.querySelector(".sidebar").classList.toggle("collapsed");
-    });
-  });
-  document.querySelectorAll(".dropdown-toggle").forEach((dropdownToggle) => {
-    dropdownToggle.addEventListener("click", (e) => {
-      e.preventDefault();
-      const dropdown = dropdownToggle.closest(".dropdown-container");
-      const menu = dropdown.querySelector(".dropdown-menu");
-      const isOpen = dropdown.classList.contains("open");
-      closeAllDropdowns();
-      toggleDropdown(dropdown, menu, !isOpen);
-    });
-  });
-  if (window.innerWidth <= 1024) {
-    document.querySelector(".sidebar").classList.add("collapsed");
-  }
-});
-
-// --- Funciones del listado de empleados ---
+// --- FUNCIONES PARA CARGAR Y RENDERIZAR EMPLEADOS ---
 async function fetchAreaMap() {
   const docRef = doc(db, "areas", "doc");
   const docSnap = await getDoc(docRef);
@@ -152,40 +90,10 @@ async function fetchDeptMap() {
 async function fetchAllEmployees() {
   const empleadosRef = collection(db, "empleados");
   const snapshot = await getDocs(empleadosRef);
-  // Aquí incluimos el id del documento en cada objeto
   allEmployees = snapshot.docs.map(doc => ({ ...doc.data(), id: doc.id }));
   allEmployees.sort((a, b) => a.nombre.localeCompare(b.nombre));
   window.allEmployees = allEmployees;
   renderEmployees(allEmployees);
-}
-
-async function buscarUsuario(queryText) {
-  if (!queryText) {
-    renderEmployees(allEmployees);
-    return;
-  }
-  const empleadosRef = collection(db, "empleados");
-  const idSnapshot = await getDocs(query(empleadosRef, where('id_usuario', '>=', queryText), where('id_usuario', '<=', queryText + '\uf8ff')));
-  const nombreSnapshot = await getDocs(query(empleadosRef, where('nombre', '>=', queryText), where('nombre', '<=', queryText + '\uf8ff')));
-  
-  const usuariosPorId = idSnapshot.docs.map(doc => doc.data());
-  const usuariosPorNombre = nombreSnapshot.docs.map(doc => doc.data());
-  
-  const mapUnicos = new Map();
-  [...usuariosPorId, ...usuariosPorNombre].forEach(usuario => {
-    mapUnicos.set(usuario.id_usuario, usuario);
-  });
-  
-  let resultadosUnicos = Array.from(mapUnicos.values());
-  resultadosUnicos.sort((a, b) => a.nombre.localeCompare(b.nombre));
-  renderEmployees(resultadosUnicos);
-}
-
-function handleSearch() {
-  const searchInput = document.getElementById('searchInput');
-  const value = searchInput.value.trim();
-  const capitalizedValue = value.charAt(0).toUpperCase() + value.slice(1);
-  buscarUsuario(capitalizedValue);
 }
 
 function renderEmployees(employeesList) {
@@ -223,7 +131,7 @@ function renderEmployees(employeesList) {
               <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8zm8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1z"/>
             </svg>
           </li>
-          <li class="card-social__item" onclick="openModalSolicitud()" title="Solicitud de permiso">
+          <li class="card-social__item" onclick="openModalSolicitud('${id_usuario}')" title="Solicitud de permiso">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-file-earmark-medical" viewBox="0 0 16 16">
               <path d="M7.5 5.5a.5.5 0 0 0-1 0v.634l-.549-.317a.5.5 0 1 0-.5.866L6 7l-.549.317a.5.5 0 1 0 .5.866l.549-.317V8.5a.5.5 0 1 0 1 0v-.634l.549.317a.5.5 0 1 0 .5-.866L8 7l.549-.317a.5.5 0 1 0-.5-.866l-.549.317z"/>
               <path d="M14 14V4.5L9.5 0H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2zM9.5 3A1.5 1.5 0 0 0 11 4.5h2V14a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1h5.5z"/>
@@ -242,7 +150,36 @@ function renderEmployees(employeesList) {
   employeesContainer.innerHTML = html;
 }
 
-// --- Funciones para dropdowns y sidebar ---
+async function buscarUsuario(queryText) {
+  if (!queryText) {
+    renderEmployees(allEmployees);
+    return;
+  }
+  const empleadosRef = collection(db, "empleados");
+  const idSnapshot = await getDocs(query(empleadosRef, where('id_usuario', '>=', queryText), where('id_usuario', '<=', queryText + '\uf8ff')));
+  const nombreSnapshot = await getDocs(query(empleadosRef, where('nombre', '>=', queryText), where('nombre', '<=', queryText + '\uf8ff')));
+  
+  const usuariosPorId = idSnapshot.docs.map(doc => doc.data());
+  const usuariosPorNombre = nombreSnapshot.docs.map(doc => doc.data());
+  
+  const mapUnicos = new Map();
+  [...usuariosPorId, ...usuariosPorNombre].forEach(usuario => {
+    mapUnicos.set(usuario.id_usuario, usuario);
+  });
+  
+  let resultadosUnicos = Array.from(mapUnicos.values());
+  resultadosUnicos.sort((a, b) => a.nombre.localeCompare(b.nombre));
+  renderEmployees(resultadosUnicos);
+}
+
+function handleSearch() {
+  const searchInput = document.getElementById('searchInput');
+  const value = searchInput.value.trim();
+  const capitalizedValue = value.charAt(0).toUpperCase() + value.slice(1);
+  buscarUsuario(capitalizedValue);
+}
+
+// --- FUNCIONES PARA SIDEBAR Y DROPDOWNS ---
 const toggleDropdown = (dropdown, menu, isOpen) => {
   dropdown.classList.toggle("open", isOpen);
   menu.style.height = isOpen ? `${menu.scrollHeight}px` : 0;
@@ -254,8 +191,30 @@ const closeAllDropdowns = () => {
   });
 };
 
-// --- Funciones para el modal de Agregar/Modificar Empleado ---
-// Actualiza el select de departamentos según el área seleccionada en el modal
+// --- FUNCIONES DEL MODAL DE SOLICITUD DE PERMISO ---
+function openModalSolicitud(empId) {
+  const emp = window.allEmployees.find(e => String(e.id_usuario) === String(empId));
+  if (emp) {
+    currentEmpSolicitud = emp;
+    document.getElementById('empleadoNombre').value = emp.nombre || '';
+    document.getElementById('empleadoPuesto').value = emp.puesto || '';
+  }
+  document.getElementById('modalSolicitud').style.display = 'block';
+}
+
+// --- FUNCIONES DEL MODAL DE AGREGAR/MODIFICAR EMPLEADO ---
+function populateAreaSelect() {
+  const selectArea = document.getElementById('areaSeleccionada');
+  if (!selectArea) return;
+  selectArea.innerHTML = '<option value="">Seleccione un área</option>';
+  Object.keys(areaCodes).forEach(areaName => {
+    const option = document.createElement('option');
+    option.value = areaName;
+    option.textContent = areaName;
+    selectArea.appendChild(option);
+  });
+}
+
 function actualizarDepartamentoModal() {
   const selectArea = document.getElementById('areaSeleccionada');
   const selectDepartamento = document.getElementById('departamentoSeleccionado');
@@ -279,7 +238,6 @@ function actualizarDepartamentoModal() {
   }
 }
 
-// Modal: Guardar (agregar o actualizar) empleado
 async function guardarEmpleado() {
   const inputCorreo = document.getElementById('correo');
   const inputIdUsuario = document.getElementById('idUsuario');
@@ -312,7 +270,6 @@ async function guardarEmpleado() {
   };
 
   try {
-    // Si currentEmployeeDocId existe, actualizamos directamente
     if (currentEmployeeDocId) {
       await updateDoc(doc(db, "empleados", currentEmployeeDocId), empleadoData);
       alert("Empleado actualizado correctamente");
@@ -327,7 +284,6 @@ async function guardarEmpleado() {
   }
 }
 
-// Modal: Cargar datos del empleado en el formulario (para modificar)
 function cargarEmpleado(emp) {
   document.getElementById('correo').value = emp.correo || '';
   document.getElementById('idUsuario').value = emp.id_usuario || '';
@@ -355,11 +311,9 @@ function cargarEmpleado(emp) {
   ) || '';
   document.getElementById('docenteSeleccionado').value = emp.Docente || '';
   document.getElementById('tipoEmpleadoSeleccionado').value = emp.TipoEmpleado || '';
-  // Guardamos el id del documento para actualizar en guardarEmpleado()
   currentEmployeeDocId = emp.id || null;
 }
 
-// Modal: Abrir el modal de Agregar/Modificar y cargar datos (para modificar)
 function openModalEmpleado(empId) {
   const emp = window.allEmployees.find(e => String(e.id_usuario) === String(empId));
   if (emp) {
@@ -371,11 +325,205 @@ function openModalEmpleado(empId) {
   document.getElementById("modalEmpleado").style.display = "block";
 }
 
-// --- Funciones para abrir/cerrar modales ---
-function openModalSolicitud() {
-  document.getElementById("modalSolicitud").style.display = "block";
+// --- EVENTOS DE INICIALIZACIÓN ---
+document.addEventListener('DOMContentLoaded', async () => {
+  // Inicializar el select de áreas para el modal de empleado
+  if (document.getElementById('areaSeleccionada')) {
+    populateAreaSelect();
+  }
+  
+  await fetchAreaMap();
+  await fetchDeptMap();
+  await fetchAllEmployees();
+
+  // Configurar búsqueda en el listado
+  const searchInput = document.getElementById('searchInput');
+  const searchButton = document.getElementById('searchButton');
+  searchInput.addEventListener('input', handleSearch);
+  searchButton.addEventListener('click', handleSearch);
+
+  // Configurar cambio de área en el modal de empleado
+  const selectAreaModal = document.getElementById('areaSeleccionada');
+  if (selectAreaModal) {
+    selectAreaModal.addEventListener('change', actualizarDepartamentoModal);
+  }
+
+  // Configurar eventos del sidebar y dropdowns
+  document.querySelectorAll(".sidebar-toggler, .sidebar-menu-button").forEach((button) => {
+    button.addEventListener("click", () => {
+      closeAllDropdowns();
+      document.querySelector(".sidebar").classList.toggle("collapsed");
+    });
+  });
+  document.querySelectorAll(".dropdown-toggle").forEach((dropdownToggle) => {
+    dropdownToggle.addEventListener("click", (e) => {
+      e.preventDefault();
+      const dropdown = dropdownToggle.closest(".dropdown-container");
+      const menu = dropdown.querySelector(".dropdown-menu");
+      const isOpen = dropdown.classList.contains("open");
+      closeAllDropdowns();
+      toggleDropdown(dropdown, menu, !isOpen);
+    });
+  });
+  if (window.innerWidth <= 1024) {
+    document.querySelector(".sidebar").classList.add("collapsed");
+  }
+
+  // --- FUNCIONALIDAD DE SOLICITUD DE PERMISO ---
+  // Función auxiliar para poblar selects con opciones
+  const populateSelect = (selectId, options) => {
+    const select = document.getElementById(selectId);
+    if (select) {
+      select.innerHTML = '<option value="">Selecciona</option>';
+      options.forEach(opt => {
+        const option = document.createElement('option');
+        option.value = opt;
+        option.textContent = opt;
+        select.appendChild(option);
+      });
+    }
+  };
+
+  // Listas de jefes inmediatos y puestos para solicitud
+  const jefesInmediatos = [
+    "ARQ. JESUS RAFAEL SANCHEZ SEBREROS",
+    "C.P ALVARO MARTIN PEREZ MANJARREZ",
+    "LIC. MARITZA JOANA LOPEZ MARTINEZ",
+    "LIC. SAUL MADERO TORRES",
+    "LIC. LUIS PEREZ VALENZUELA",
+    "C.P DAVID ALEJANDRO SOTO GRIJALVA",
+    "PSIC. LAURA FANI SILVA RIOS",
+    "MDE. CLAUDIA ISABEL PONCE OROZCO",
+    "ING. RODRIGO GARCIA HERNANDEZ",
+    "ING. MARCO ANTONIO PEREZ ELIAS",
+    "MTRO. GABRIEL RIVERA SOLIS",
+    "LIC. LUCIA HERNANDEZ SOTO",
+    "LIC. SAMANTHA FATIMA SANTANA HERNANDEZ",
+    "LIC. CELIA YADIRA SOTELO CASTRO",
+    "LIC. DULCE JAQUELINE CORRAL CUADRAS"
+  ];
+  const puestosJefes = [
+    "DIRECTOR GENERAL",
+    "SUBDIRECCION DE SERVICIOS ADMINISTRATIVOS",
+    "SUBDIRECCION DE PLANEACION Y VINCULACION",
+    "SUBDIRECCION ACADEMICA"
+  ];
+
+  // Poblar los selects de jefes y puestos en el modal de solicitud
+  populateSelect('nombreJefe', jefesInmediatos);
+  populateSelect('puestoJefe', puestosJefes);
+  populateSelect('jefeAutoriza', jefesInmediatos);
+  populateSelect('puestoJefeAutoriza', puestosJefes);
+
+  // Configurar el input de archivos adjuntos en la solicitud
+  const fileInput = document.getElementById('fileAdjuntos');
+  if (fileInput) {
+    fileInput.addEventListener('change', (event) => {
+      const files = Array.from(event.target.files);
+      archivosAdjuntos = archivosAdjuntos.concat(files);
+    });
+  }
+
+  // Configurar el input de "horas de la falta"
+  const horasFaltaInput = document.getElementById('horasFalta');
+  if (horasFaltaInput) {
+    horasFaltaInput.addEventListener('input', (e) => {
+      let input = e.target.value;
+      if (input.length === 2 || input.length === 8) {
+        input += ":";
+      }
+      if (input.length === 5) {
+        input += "-";
+      }
+      const regex = /^[0-9:-]*$/;
+      if (regex.test(input)) {
+        e.target.value = input;
+      }
+    });
+  }
+
+  // Habilitar/deshabilitar el campo "horasFalta" según el tipo de permiso
+  const tipoPermisoSelect = document.getElementById('tipoPermiso');
+  if (tipoPermisoSelect && horasFaltaInput) {
+    tipoPermisoSelect.addEventListener('change', (e) => {
+      const selectedTipo = e.target.value;
+      if (selectedTipo !== "Parcial") {
+        horasFaltaInput.value = "";
+        horasFaltaInput.disabled = true;
+      } else {
+        horasFaltaInput.disabled = false;
+      }
+    });
+  }
+});
+
+// --- FUNCIONES PARA ENVIAR SOLICITUD ---
+async function enviarSolicitud() {
+  const form = document.getElementById('form-permiso');
+  if (!currentEmpSolicitud ||
+      !currentEmpSolicitud.id_usuario ||
+      !currentEmpSolicitud.nombre ||
+      !currentEmpSolicitud.puesto ||
+      !currentEmpSolicitud.Area ||
+      !currentEmpSolicitud.Departamento) {
+    alert("Faltan datos del empleado. Verifique la información.");
+    return;
+  }
+  // Se usa un valor fijo para numeroPermiso; ajústalo según tu lógica
+  const numeroPermiso = "1";
+  const id_usuario = currentEmpSolicitud.id_usuario;
+  const nombre = currentEmpSolicitud.nombre;
+  const puesto = currentEmpSolicitud.puesto;
+  const areaId = currentEmpSolicitud.Area;
+  const departamentoId = currentEmpSolicitud.Departamento;
+  
+  const idPermiso = `${areaId}${departamentoId}${numeroPermiso}-${id_usuario}`;
+  const fechaSolicitud = new Date().toISOString();
+
+  // Obtener valores de los campos del formulario
+  const motivoFalta = document.getElementById('motivoFalta').value;
+  const horarioLaboral = document.getElementById('horarioLaboral').value;
+  const fechaInicio = document.getElementById('fechaInicio').value;
+  const fechaFin = document.getElementById('fechaFin').value;
+  const tipoPermiso = document.getElementById('tipoPermiso').value;
+  const horasFalta = tipoPermiso === "Parcial" ? document.getElementById('horasFalta').value : null;
+  const autorizacion = document.getElementById('autorizacion').value;
+  const nombreJefe = document.getElementById('nombreJefe').value;
+  const puestoJefe = document.getElementById('puestoJefe').value;
+  const jefeAutoriza = document.getElementById('jefeAutoriza').value;
+  const puestoJefeAutoriza = document.getElementById('puestoJefeAutoriza').value;
+
+  try {
+    await addDoc(collection(db, "solicitud"), {
+      id_permiso: idPermiso,
+      id_usuario,
+      nombre_empleado: nombre,
+      puesto_empleado: puesto,
+      motivo_falta: motivoFalta,
+      nombre_jefe_inmediato: nombreJefe,
+      puesto_jefe_inmediato: puestoJefe,
+      horario_laboral: horarioLaboral,
+      rango_fechas: { inicio: fechaInicio, fin: fechaFin },
+      autorizacion_goce_sueldo: autorizacion,
+      tipo_permiso: tipoPermiso,
+      horas_falta: horasFalta,
+      jefe_autoriza_permiso: jefeAutoriza,
+      puesto_jefe_autoriza: puestoJefeAutoriza,
+      archivos_adjuntos: archivosAdjuntos.map(file => file.name),
+      fecha_solicitud: fechaSolicitud
+    });
+    alert(`Solicitud enviada exitosamente con ID: ${idPermiso}`);
+    form.reset();
+    archivosAdjuntos = [];
+    document.getElementById('horasFalta').disabled = true;
+    closeModalSolicitud();
+  } catch (error) {
+    console.error("Error al enviar la solicitud:", error);
+    alert("Error al enviar la solicitud.");
+  }
 }
 
+// --- FUNCIONES PARA CERRAR MODALES ---
 function closeModalSolicitud() {
   document.getElementById("modalSolicitud").style.display = "none";
 }
@@ -387,7 +535,6 @@ function closeModalEmpleado() {
   if (form) {
     form.reset();
   }
-  // Reiniciamos la variable del documento
   currentEmployeeDocId = null;
 }
 
@@ -400,9 +547,14 @@ window.addEventListener('click', function(event) {
   }
 });
 
-// Exponer funciones globalmente para uso en HTML
+// --- OTRAS FUNCIONES Y ASIGNACIÓN DE EVENTOS GLOBALES ---
+window.verDetalles = function (idUsuario) {
+  window.location.href = `detallesEmpleados.html?id_usuario=${idUsuario}`;
+};
+
 window.openModalEmpleado = openModalEmpleado;
 window.openModalSolicitud = openModalSolicitud;
 window.closeModalEmpleado = closeModalEmpleado;
 window.closeModalSolicitud = closeModalSolicitud;
 window.guardarEmpleado = guardarEmpleado;
+window.enviarSolicitud = enviarSolicitud;
