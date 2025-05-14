@@ -1,10 +1,50 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <meta http-equiv="refresh" content="0; url=Html/Login.html" />
-    <title>Redirección</title>
+  <meta charset="UTF-8" />
+  <title>Iniciar sesión</title>
+  <!-- Estilos -->
+  <link rel="stylesheet" href="../Css/login.css" />
+
+  <!-- 
+    Importante: Para usar ES modules en el navegador, 
+    ponemos type="module" en el script.
+  -->
+  <script type="module" src="../JS/login.js"></script>
 </head>
 <body>
-    Si no redirige automáticamente, <a href="../Login.html">haz clic aquí</a>.
+  <div class="login-background">
+    <div class="login-container">
+      <img 
+        src="https://cdn-icons-png.flaticon.com/512/1077/1077063.png" 
+        alt="Logo" 
+        class="logo"
+      />
+      <h1 class="login-title">Iniciar sesión</h1>
+      
+      <input
+        id="emailInput"
+        type="email"
+        placeholder="Ingresa tu correo"
+        class="login-input"
+      />
+
+      <input
+        id="passwordInput"
+        type="password"
+        placeholder="Ingresa tu contraseña"
+        class="login-input"
+      />
+
+      <!-- Mensaje de error -->
+      <p id="errorMessage" class="error-message" style="display: none;"></p>
+
+      <button id="loginButton" class="login-button">
+        Iniciar sesión
+      </button>
+
+      <p class="forgot-password">¿Olvidaste tu contraseña?</p>
+    </div>
+  </div>
 </body>
 </html>
