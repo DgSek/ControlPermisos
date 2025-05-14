@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
     // Funciones de navegación
     function handleRegistroClick() {
-      window.location.href = 'login.html'; // Redirige a la pantalla de Login
+      window.location.href = 'Login.html'; // Redirige a la pantalla de Login
     }
   
     function handlePreguntasClick() {
