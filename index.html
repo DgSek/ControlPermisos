@@ -1,47 +1,14 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <title>Iniciar sesión</title>
-  <!-- Estilos: Ruta desde la raíz -->
-  <link rel="stylesheet" href="../Css/Login.css" />  <!-- Cambiado a "Login.css" (mayúscula) -->
-
-  <!-- Script: Ruta desde la raíz -->
-  <script type="module" src="../JS/Login.js"></script>  <!-- Cambiado a "Login.js" (mayúscula) -->
+  <meta charset="UTF-8">
+  <title>Bienvenidos</title>
+  <!-- Enlaza tu archivo CSS cuando lo necesites -->
+  <link rel="stylesheet" href="../Css/Bienvenida.css"> 
+  
+  <script type="module" src="../JS/Bienvenida.js"></script>
 </head>
 <body>
-  <div class="login-background">
-    <div class="login-container">
-      <!-- Imagen: Usa una URL externa o ajusta la ruta local -->
-      <img 
-        src="https://cdn-icons-png.flaticon.com/512/1077/1077063.png" 
-        alt="Logo" 
-        class="logo"
-      />
-      <h1 class="login-title">Iniciar sesión</h1>
-      
-      <input
-        id="emailInput"
-        type="email"
-        placeholder="Ingresa tu correo"
-        class="login-input"
-      />
-
-      <input
-        id="passwordInput"
-        type="password"
-        placeholder="Ingresa tu contraseña"
-        class="login-input"
-      />
-
-      <p id="errorMessage" class="error-message" style="display: none;"></p>
-
-      <button id="loginButton" class="login-button">
-        Iniciar sesión
-      </button>
-
-      <p class="forgot-password">¿Olvidaste tu contraseña?</p>
-    </div>
-  </div>
+  <div id="bienvenida-container"></div>
 </body>
 </html>
