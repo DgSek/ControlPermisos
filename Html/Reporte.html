@@ -3,16 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <title>Reporte</title>
-  <!-- CSS (sidebar.css, etc.) -->
+  <!-- CSS -->
   <link rel="stylesheet" href="../Css/sideBar.css" />
   <link rel="stylesheet" href="../Css/principalAdmin.css" />
   <link rel="stylesheet" href="../Css/Reporte.css" />
   <!-- Fuentes e iconos -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" />
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+  />
+  <link
+    rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded"
+  />
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- JS principal (Reporte.js) -->
+  <!-- JS principal -->
   <script type="module" src="../JS/Reporte.js"></script>
 </head>
 <body>
@@ -28,9 +34,7 @@
         </button>
       </header>
       <nav class="sidebar-nav">
-        <ul class="nav-list primary-nav" id="primary-menu">
-          <!-- Menú dinámico (áreas y departamentos) -->
-        </ul>
+        <ul class="nav-list primary-nav" id="primary-menu"></ul>
         <ul class="nav-list secondary-nav">
           <li class="nav-item">
             <a href="#" class="nav-link">
@@ -53,14 +57,17 @@
       <span class="material-symbols-rounded">menu</span>
     </button>
 
-    <!-- Contenedor principal del contenido (Reportes, etc.) -->
+    <!-- Contenido principal -->
     <div class="content-container">
-      <!-- Aquí se inyecta todo el contenido del reporte -->
+      <!-- Este div queda vacío: el JS lo llenará con tarjetas y gráficas -->
       <div id="reporte-contenido"></div>
     </div>
   </div>
 
-  <!-- Portal flotante para submenús en modo colapsado -->
-  <div id="portal-submenu" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none;"></div>
+  <!-- Portal para submenús colapsados -->
+  <div
+    id="portal-submenu"
+    style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none;"
+  ></div>
 </body>
 </html>

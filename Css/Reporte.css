@@ -1,4 +1,5 @@
 /* Reporte.css */
+
 /* Estilos para el contenedor principal del menú lateral */
 .menu-lateral {
   width: 250px;
@@ -13,96 +14,35 @@
   box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
 }
 
-.menu-logo h2 {
-  color: #6a1b9a;
-  font-size: 24px;
-  margin: 0;
-  text-align: center;
-}
-
-.menu-items {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-}
-
-.menu-item {
-  padding: 15px 0;
-  border-bottom: 1px solid #ddd;
-  color: #333;
-  font-size: 16px;
-  cursor: pointer;
-  position: relative;
-}
-
-.menu-item:hover {
-  color: #6a1b9a;
-}
-
-.submenu {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  padding-left: 15px;
-}
-
-.submenu li {
-  padding: 10px 0;
-  font-size: 14px;
-  color: #555;
-  border-bottom: 1px solid #f0f0f0;
-}
-
-/* Estilo específico para el botón "General" */
-.submenu-button {
-  background: none;
-  border: none;
-  color: #6a1b9a;
-  cursor: pointer;
-  text-align: left;
-  padding: 0;
-  font-size: 14px;
-  width: 100%;
-}
-
-.submenu-button:hover {
-  color: #ffffff;
-  font-weight: bold;
-  text-decoration: underline;
-}
-
 /* Ajustes para que el área de reporte se ajuste automáticamente */
 .reporte-contenido {
   margin-left: 270px;
   padding: 20px;
+  padding-bottom: 20px;        /* reducido de 40px a 20px */
   width: calc(100% - 270px);
   background-color: #f9f9f9;
   border-left: 1px solid #ddd;
-  overflow-y: auto; /* Permite el desplazamiento si el contenido es demasiado largo */
-  max-height: 100vh; /* Asegura que el contenido ocupe hasta el alto máximo de la pantalla */
+  overflow-y: auto;
+  max-height: 100vh;
 }
 
 /* ================================
- Estilos para el Área de Reportes y Gráficas
-=================================== */
-
-/* Contenedor de reportes: se expande para usar todo el ancho disponible */
+   Estilos para el Área de Reportes
+   =============================== */
 .report-container {
   background: #fff;
   border-radius: 8px;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
   padding: 20px;
-  width: 100%;   /* Usa todo el ancho disponible */
-  margin: 0;     /* Sin margen extra */
+  padding-bottom: 20px;        /* reducido de 40px a 20px */
+  width: 100%;
+  margin: 0;
   box-sizing: border-box;
 }
 
-/* Encabezado del reporte */
 .report-header {
   margin-bottom: 15px;
-  text-align: left;
 }
-
 .report-header h2 {
   font-size: 1.5rem;
   color: #333;
@@ -110,185 +50,125 @@
 }
 
 /* Filtros y contenedores */
-.filters-row, .combobox-container, .filtros-container {
+.combobox-container,
+.filtros-container {
   margin-bottom: 20px;
 }
 
-.combobox-container {
-  margin-bottom: 20px; /* Espacio adicional entre los elementos */
-}
-
-.filtros-container {
-  margin-bottom: 20px; /* Espacio adicional entre los elementos */
-}
-
-.date-filters {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-/* Lista de resultados */
+/* Layout de tarjetas: grid responsivo */
 .solicitudes-lista {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
   list-style: none;
   margin: 0;
+  margin-bottom: 1.5rem;        /* reducido de 2rem a 1.5rem */
   padding: 0;
-  max-width: 100%; /* Para que la lista se ajuste al contenedor */
 }
 
-/* Ajustes para los elementos de las solicitudes */
 .solicitud-item {
-  background-color: #f9f9f9;
-  padding: 10px 15px;
-  margin-bottom: 8px;
-  border-radius: 5px;
-  border: 1px solid #ddd;
-  box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.1);
-  width: 100%; /* Para que cada solicitud ocupe el ancho disponible */
+  background-color: #fff;
+  padding: 15px;                /* reducido de 20px a 15px */
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  max-width: 260px;
   box-sizing: border-box;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.solicitud-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0px 5px 10px rgba(0, 0, 0, 0.12);
 }
 
 .solicitud-item p {
-  margin: 5px 0;
+  margin: 4px 0;                /* reducido de 6px a 4px */
   font-size: 14px;
+  line-height: 1.3;             /* reducido de 1.5 a 1.3 */
   color: #333;
-}
-
-.mensaje-no-solicitudes {
-  font-size: 16px;
-  color: #999;
-  text-align: center;
-  background-color: #f0f0f0;
-  padding: 15px;
-  border-radius: 8px;
+  white-space: normal;
 }
 
 /* Botón de exportar */
 .export-button {
-  padding: 8px 16px;
+  display: inline-block;
+  margin-top: 0.8rem;           /* ligeramente reducido */
+  padding: 10px 20px;
   background-color: #36A2EB;
   color: #fff;
   border: none;
   border-radius: 5px;
   cursor: pointer;
   font-weight: 500;
-  transition: background 0.3s ease;
-  margin-left: 10px; /* Separación con el combobox */
+  transition: background 0.3s ease, box-shadow 0.3s ease;
 }
-
 .export-button:hover {
   background-color: #2b8cc5;
-  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+  box-shadow: 0px 3px 6px rgba(0, 0, 0, 0.2);
 }
 
 /* ================================
- Sección de Gráficas (Tarjetas)
-=================================== */
-.charts-section {
-  margin-top: 20px;
-}
-
-.row {
-  display: flex;
-  flex-wrap: wrap;
+   Sección de Gráficas – nuevo diseño
+   =============================== */
+.charts-bar-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
   gap: 1rem;
+  margin-top: 2rem;
+  padding: 0 1rem;
 }
 
-.col-md-6 {
-  flex: 1 1 calc(50% - 1rem);
-}
-
-.col-md-12 {
-  flex: 1 1 100%;
-}
-
-.card.chart-card {
+.charts-bar-section > div {
   background: #fff;
-  border-radius: 6px;
-  border: 1px solid #ddd;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-  overflow: hidden;
-  width: 100%;
-}
-
-.card-header {
-  padding: 10px;
-  color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  padding: 1rem;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
 }
 
-.card-header h4 {
-  margin: 0;
+.charts-bar-section h4 {
+  margin: 0 0 0.5rem;
   font-size: 1.1rem;
-}
-
-/* Colores de cabecera */
-.chart-header-pie {
-  background: #d9534f;
-}
-
-.chart-header-bar {
-  background: #5bc0de;
-}
-
-.chart-header-individual {
-  background: #5cb85c;
-}
-
-.card-body {
-  padding: 15px;
+  color: #333;
   text-align: center;
 }
 
-.card-body canvas {
-  max-width: 100%;
-  display: block;
-  margin: 0 auto;
+.charts-bar-section canvas {
+  width: 100% !important;
+  height: 300px !important;
+  flex: 1;
 }
 
-.reporte-contenido h3 {
-  color: #6a1b9a;
-  font-size: 18px;
-  margin-bottom: 15px;
+/* Ajustes mobile */
+@media (max-width: 600px) {
+  .solicitudes-lista {
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
 }
-
-/* Estilos opcionales para la sección de reportes estadísticos */
-#statistical-reports {
-  margin-top: 20px;
-  padding: 15px;
-  background-color: #fff;
-  border-top: 1px solid #ddd;
-}
-
-#statistical-reports h3 {
-  margin-bottom: 15px;
-  color: #6a1b9a;
-}
-
-#statistical-reports section {
-  margin-bottom: 30px;
-}
-
-#statistical-reports h4 {
-  margin-bottom: 10px;
-  color: #6a1b9a;
-}
-
-#statistical-reports canvas {
-  display: block;
-  margin: 0 auto 20px;
-}
-
-/* Ajuste del contenedor principal para dispositivos más pequeños */
 @media (max-width: 768px) {
   .menu-lateral {
-      width: 200px; /* Reduce el tamaño del menú lateral en pantallas pequeñas */
+    width: 200px;
   }
   .reporte-contenido {
-      margin-left: 220px;
-      width: calc(100% - 220px);
-      max-height: calc(100vh - 60px); /* Ajusta la altura en dispositivos móviles */
+    margin-left: 220px;
+    width: calc(100% - 220px);
+    max-height: calc(100vh - 60px);
   }
 }
+/* Reducir tamaño y forzar proporción cuadrada */
+.charts-bar-section > div {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.5rem;
+}
+.charts-bar-section canvas {
+  max-width: 400px !important;
+  max-height: 400px !important;
+}
+

@@ -4,34 +4,29 @@ import * as XLSX from 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.m
 
 document.addEventListener('DOMContentLoaded', () => {
   // -----------------------------
-  // Funcionalidad del Sidebar Global (estática)
+  // Sidebar
   // -----------------------------
   const toggleDropdown = (dropdown, menu, isOpen) => {
     dropdown.classList.toggle("open", isOpen);
     menu.style.height = isOpen ? `${menu.scrollHeight}px` : 0;
   };
-
   const closeAllDropdowns = () => {
-    document.querySelectorAll(".dropdown-container.open").forEach((openDropdown) => {
+    document.querySelectorAll(".dropdown-container.open").forEach(openDropdown => {
       const menu = openDropdown.querySelector(".dropdown-menu");
       toggleDropdown(openDropdown, menu, false);
     });
   };
-
-  // Abrir/cerrar el sidebar
-  document.querySelectorAll(".sidebar-toggler, .sidebar-menu-button").forEach((button) => {
+  document.querySelectorAll(".sidebar-toggler, .sidebar-menu-button").forEach(button => {
     button.addEventListener("click", () => {
       closeAllDropdowns();
       document.querySelector(".sidebar").classList.toggle("collapsed");
     });
   });
-
-  // Enlazar eventos de click a los dropdown-toggle (en modo expandido)
   function bindDropdownToggles() {
-    document.querySelectorAll(".dropdown-toggle").forEach((dropdownToggle) => {
-      dropdownToggle.addEventListener("click", (e) => {
+    document.querySelectorAll(".dropdown-toggle").forEach(dt => {
+      dt.addEventListener("click", e => {
         e.preventDefault();
-        const dropdown = dropdownToggle.closest(".dropdown-container");
+        const dropdown = dt.closest(".dropdown-container");
         const menu = dropdown.querySelector(".dropdown-menu");
         const isOpen = dropdown.classList.contains("open");
         closeAllDropdowns();
@@ -39,13 +34,12 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   }
-
   if (window.innerWidth <= 1024) {
     document.querySelector(".sidebar").classList.add("collapsed");
   }
 
   // -----------------------------
-  // Funcionalidad del Reporte (consultas, renderizado, etc.)
+  // Estado global
   // -----------------------------
   let solicitudes = [];
   let todasLasSolicitudes = [];
@@ -65,12 +59,8 @@ document.addEventListener('DOMContentLoaded', () => {
     'Subdirección académica': 'A4',
     'Docentes': 'A5'
   };
-
   const departmentCodes = {
-    'Dirección General': {
-      'Dirección General': '01',
-      'Innovación y calidad': '02'
-    },
+    'Dirección General': { 'Dirección General': '01', 'Innovación y calidad': '02' },
     'Subdirección de planeación y vinculación': {
       'Subdirección de planeación y vinculación': '01',
       'Departamento de servicios escolares': '02',
@@ -90,150 +80,123 @@ document.addEventListener('DOMContentLoaded', () => {
       'Vigilante': '09'
     },
     'Subdirección académica': {
-      'Subdirección académica': '01',
-      'Jefes de división': '02',
-      'Departamento de psicología': '03',
-      'Trabajo social': '04',
-      'Laboratorios': '05'
+      'Subdirección académica': '01', 'Jefes de división': '02',
+      'Departamento de psicología': '03', 'Trabajo social': '04', 'Laboratorios': '05'
     },
     'Docentes': {
-      'Ingeniería Industrial': '01',
-      'Lic. Administración': '02',
-      'Ing. Sistemas computacionales': '03',
-      'Ing. Civil': '04',
-      'Extraescolares': '05',
-      'Coordinación de lenguas': '06'
+      'Ingeniería Industrial': '01', 'Lic. Administración': '02',
+      'Ing. Sistemas computacionales': '03', 'Ing. Civil': '04',
+      'Extraescolares': '05', 'Coordinación de lenguas': '06'
     }
   };
 
-  function extractEmployeeNumbers(solicitudesList) {
-    return solicitudesList.map(solicitud => {
-      const parts = solicitud.id_permiso.split('-');
-      return parts[1];
-    });
+  // -----------------------------
+  // Fetch de datos
+  // -----------------------------
+  function extractEmployeeNumbers(list) {
+    return list.map(s => s.id_permiso.split('-')[1]);
   }
-
   async function fetchEmployees(employeeNumbers) {
     try {
-      const empleadosRef = collection(db, 'empleados');
-      const empleadosSnapshot = await getDocs(empleadosRef);
-      const empleadosData = empleadosSnapshot.docs
-        .map(doc => doc.data())
-        .filter(empleado => empleado.id_usuario && employeeNumbers.includes(empleado.id_usuario.toString()));
-      empleados = empleadosData;
+      const snap = await getDocs(collection(db, 'empleados'));
+      empleados = snap.docs
+        .map(d => d.data())
+        .filter(e => e.id_usuario && employeeNumbers.includes(e.id_usuario.toString()));
       renderReporteContent();
-    } catch (error) {
-      console.error("Error obteniendo empleados: ", error);
+    } catch (e) {
+      console.error("Error obteniendo empleados:", e);
     }
   }
-
   async function fetchSolicitudes(areaCode, departmentCode = null) {
     try {
-      const solicitudesRef = collection(db, 'solicitud');
-      let solicitudesQuery;
-      if (departmentCode) {
-        solicitudesQuery = query(
-          solicitudesRef,
+      const ref = collection(db, 'solicitud');
+      const q = departmentCode
+        ? query(ref,
           where('id_permiso', '>=', `${areaCode}${departmentCode}`),
           where('id_permiso', '<', `${areaCode}${departmentCode}z`)
-        );
-      } else {
-        solicitudesQuery = query(
-          solicitudesRef,
+        )
+        : query(ref,
           where('id_permiso', '>=', `${areaCode}`),
           where('id_permiso', '<', `${areaCode}z`)
         );
-      }
-      const solicitudesSnapshot = await getDocs(solicitudesQuery);
-      const solicitudesData = solicitudesSnapshot.docs.map(docSnap => {
-        const data = docSnap.data();
-        if (data.fecha_solicitud && data.fecha_solicitud.seconds) {
-          data.fecha_solicitud = new Date(data.fecha_solicitud.seconds * 1000)
-            .toISOString()
-            .slice(0, 10);
+      const snap = await getDocs(q);
+      const data = snap.docs.map(doc => {
+        const d = doc.data();
+        if (d.fecha_solicitud?.seconds) {
+          d.fecha_solicitud = new Date(d.fecha_solicitud.seconds * 1000)
+            .toISOString().slice(0, 10);
         }
-        return data;
+        return d;
       });
-      solicitudes = solicitudesData;
-      todasLasSolicitudes = solicitudesData;
-      return solicitudesData;
-    } catch (error) {
-      console.error("Error obteniendo solicitudes: ", error);
+      solicitudes = data;
+      todasLasSolicitudes = data;
+      return data;
+    } catch (e) {
+      console.error("Error obteniendo solicitudes:", e);
     }
   }
 
+  // -----------------------------
+  // Handlers de menú
+  // -----------------------------
   async function handleGeneralClick(area) {
-    const areaCode = areaCodes[area];
-    const solicitudesData = await fetchSolicitudes(areaCode);
-    if (solicitudesData && solicitudesData.length > 0) {
-      const employeeNumbers = extractEmployeeNumbers(solicitudesData);
-      await fetchEmployees(employeeNumbers);
+    const code = areaCodes[area];
+    const data = await fetchSolicitudes(code);
+    if (data?.length) {
+      await fetchEmployees(extractEmployeeNumbers(data));
       tituloReporte = `Reporte de Permisos - ${area}`;
     } else {
       tituloReporte = "No se encontraron solicitudes.";
       empleados = [];
     }
+    empleadoSeleccionado = "";
     renderReporteContent();
   }
-
-  async function handleDepartmentClick(area, department) {
-    const areaCode = areaCodes[area];
-    const departmentCode = departmentCodes[area] ? departmentCodes[area][department] : null;
-    const solicitudesData = await fetchSolicitudes(areaCode, departmentCode);
-    if (solicitudesData && solicitudesData.length > 0) {
-      const employeeNumbers = extractEmployeeNumbers(solicitudesData);
-      await fetchEmployees(employeeNumbers);
-      tituloReporte = `Reporte de Permisos - ${department}`;
+  async function handleDepartmentClick(area, dept) {
+    const aCode = areaCodes[area];
+    const dCode = departmentCodes[area]?.[dept] || null;
+    const data = await fetchSolicitudes(aCode, dCode);
+    if (data?.length) {
+      await fetchEmployees(extractEmployeeNumbers(data));
+      tituloReporte = `Reporte de Permisos - ${dept}`;
     } else {
       tituloReporte = "No se encontraron solicitudes.";
       empleados = [];
     }
+    empleadoSeleccionado = "";
     renderReporteContent();
   }
-
   function handleEmployeeSelection(e) {
     empleadoSeleccionado = e.target.value;
-    if (empleadoSeleccionado === "") {
-      solicitudes = todasLasSolicitudes;
-    } else {
-      solicitudes = todasLasSolicitudes.filter(solicitud =>
-        solicitud.id_permiso.endsWith(`-${empleadoSeleccionado}`)
-      );
-    }
+    solicitudes = empleadoSeleccionado
+      ? todasLasSolicitudes.filter(s => s.id_permiso.endsWith(`-${empleadoSeleccionado}`))
+      : todasLasSolicitudes;
+    updateMonthlyChart(empleadoSeleccionado);
     renderReporteContent();
   }
-
   function handleFiltrarPorFecha() {
-    const fechaInicioInput = document.getElementById('fechaInicio').value;
-    const fechaFinInput = document.getElementById('fechaFin').value;
-    if (!fechaInicioInput || !fechaFinInput) {
-      alert("Por favor, seleccione un rango de fechas válido.");
-      return;
-    }
-    fechaInicio = fechaInicioInput;
-    fechaFin = fechaFinInput;
-    const inicio = new Date(fechaInicio);
-    const fin = new Date(fechaFin);
-    const solicitudesFiltradas = todasLasSolicitudes.filter(solicitud => {
-      const fechaSolicitud = new Date(solicitud.fecha_solicitud);
-      return fechaSolicitud >= inicio && fechaSolicitud <= fin;
+    const inicio = document.getElementById('fechaInicio').value;
+    const fin = document.getElementById('fechaFin').value;
+    if (!inicio || !fin) return alert("Por favor, seleccione un rango de fechas válido.");
+    fechaInicio = inicio; fechaFin = fin;
+    const i = new Date(inicio), f = new Date(fin);
+    solicitudes = todasLasSolicitudes.filter(s => {
+      const fs = new Date(s.fecha_solicitud);
+      return fs >= i && fs <= f;
     });
-    solicitudes = solicitudesFiltradas;
     renderReporteContent();
   }
-
   function exportToExcel() {
-    if (!solicitudes || solicitudes.length === 0) {
-      alert("No hay datos para exportar.");
-      return;
-    }
-    const worksheet = XLSX.utils.json_to_sheet(solicitudes);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Reportes");
-    XLSX.writeFile(workbook, "reporte_permisos.xlsx");
+    if (!solicitudes.length) return alert("No hay datos para exportar.");
+    const ws = XLSX.utils.json_to_sheet(solicitudes);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Reportes");
+    XLSX.writeFile(wb, "reporte_permisos.xlsx");
   }
 
-  // --- Renderizar el menú principal (áreas + departamentos) ---
+  // ================================
+  //   Render del menú lateral
+  // ================================
   function renderPrimaryMenu() {
     let html = '';
     for (const area in areaCodes) {
@@ -246,378 +209,273 @@ document.addEventListener('DOMContentLoaded', () => {
           </a>
           <ul class="dropdown-menu">
             <li class="nav-item">
-              <a href="#" class="nav-link dropdown-link" onclick="generalClickHandler('${area}')">
+              <a href="#" class="nav-link dropdown-link" onclick="handleGeneralClick('${area}')">
                 General
               </a>
-            </li>
-      `;
+            </li>`;
       if (departmentCodes[area]) {
-        for (const department in departmentCodes[area]) {
+        for (const dept in departmentCodes[area]) {
           html += `
             <li class="nav-item">
-              <a href="#" class="nav-link dropdown-link"
-                 onclick="departmentClickHandler('${area}', '${department}')">
-                ${department}
+              <a href="#" class="nav-link dropdown-link" onclick="handleDepartmentClick('${area}','${dept}')">
+                ${dept}
               </a>
-            </li>
-          `;
+            </li>`;
         }
       }
       html += `
           </ul>
-        </li>
-      `;
+        </li>`;
     }
     primaryMenuEl.innerHTML = html;
     bindDropdownToggles();
   }
 
-  // --- Renderizar el contenido del reporte (con mejoras en el área de gráficas) ---
+  // ================================
+  //   Render de tarjetas + gráficas
+  // ================================
   function renderReporteContent() {
     let html = `<h3>${tituloReporte}</h3>`;
+
     html += `
       <div class="combobox-container">
         <label for="empleados-select">Seleccione un empleado:</label>
-        <select id="empleados-select" onchange="employeeSelectionHandler(event)">
-          <option value="">-- Todos los empleados --</option>
-    `;
-    empleados.forEach(empleado => {
-      html += `
-          <option value="${empleado.id_usuario}" ${empleadoSeleccionado === empleado.id_usuario ? 'selected' : ''}>
-            ${empleado.nombre}
-          </option>
-      `;
+        <select id="empleados-select" onchange="handleEmployeeSelection(event)">
+          <option value="">-- Todos --</option>`;
+    empleados.forEach(e => {
+      html += `<option value="${e.id_usuario}" ${empleadoSeleccionado === e.id_usuario ? 'selected' : ''}>${e.nombre}</option>`;
     });
     html += `
         </select>
       </div>
       <div class="filtros-container">
-        <label for="fechaInicio">Fecha Inicio:</label>
+        <label>Fecha Inicio:</label>
         <input type="date" id="fechaInicio" value="${fechaInicio}">
-        <label for="fechaFin">Fecha Fin:</label>
+        <label>Fecha Fin:</label>
         <input type="date" id="fechaFin" value="${fechaFin}">
-        <button onclick="filtrarPorFechaHandler()" class="filtrar-button">
-          Filtrar por Fecha
-        </button>
-      </div>
-    `;
+        <button onclick="handleFiltrarPorFecha()" class="filtrar-button">Filtrar</button>
+      </div>`;
 
-    if (solicitudes && solicitudes.length > 0) {
+    if (solicitudes.length) {
       html += `<ul class="solicitudes-lista">`;
-      solicitudes.forEach(solicitud => {
+      solicitudes.forEach(s => {
         html += `
           <li class="solicitud-item">
-            <p><strong>Nombre Empleado:</strong> ${solicitud.nombre_empleado}</p>
-            <p><strong>Motivo Falta:</strong> ${solicitud.motivo_falta}</p>
-            <p><strong>Fecha Solicitud:</strong> ${solicitud.fecha_solicitud}</p>
-            <p><strong>Tipo Permiso:</strong> ${solicitud.tipo_permiso}</p>
-            <p><strong>Horario Laboral:</strong> ${solicitud.horario_laboral}</p>
-            <p><strong>Nombre Jefe Autoriza:</strong> ${solicitud.jefe_autoriza_permiso}</p>
-            <p><strong>Puesto Empleado:</strong> ${solicitud.puesto_empleado}</p>
-          </li>
-        `;
+            <p><strong>Nombre:</strong> ${s.nombre_empleado}</p>
+            <p><strong>Motivo:</strong> ${s.motivo_falta}</p>
+            <p><strong>Fecha:</strong> ${s.fecha_solicitud}</p>
+            <p><strong>Tipo:</strong> ${s.tipo_permiso}</p>
+            <p><strong>Horario:</strong> ${s.horario_laboral}</p>
+            <p><strong>Jefe:</strong> ${s.jefe_autoriza_permiso}</p>
+            <p><strong>Puesto:</strong> ${s.puesto_empleado}</p>
+          </li>`;
       });
       html += `</ul>`;
     } else {
-      html += `
-        <p class="mensaje-no-solicitudes">
-          No se encontraron solicitudes en el rango de fechas seleccionado.
-        </p>
-      `;
+      html += `<p class="mensaje-no-solicitudes">No hay solicitudes en el rango seleccionado.</p>`;
     }
 
+    html += `<button onclick="exportToExcel()" class="export-button">Exportar a Excel</button>`;
+
     html += `
-      <button onclick="exportToExcelHandler()" class="export-button">
-        Exportar a Excel
-      </button>
-    `;
-
-    // Sección de gráficas organizada en tarjetas
-    html += `
-      <div class="charts-section">
-        <div class="row">
-          <!-- Tarjeta para la gráfica de Pie (Reporte por Área) -->
-          <div class="col-md-6">
-            <div class="card chart-card">
-              <div class="card-header chart-header-pie">
-                <h4>Pie Chart</h4>
-              </div>
-              <div class="card-body">
-                <canvas id="chartArea" width="400" height="400"></canvas>
-              </div>
-            </div>
-          </div>
-
-          <!-- Tarjeta para la gráfica de Barras (Reporte por Departamento) -->
-          <div class="col-md-6">
-            <div class="card chart-card">
-              <div class="card-header chart-header-bar">
-                <h4>Stacked Bar Chart</h4>
-              </div>
-              <div class="card-body">
-                <canvas id="chartDepartment" width="400" height="400"></canvas>
-              </div>
-            </div>
-          </div>
+      <div class="charts-bar-section">
+        <div>
+          <h4>Solicitudes por Área</h4>
+          <canvas id="chartArea"></canvas>
         </div>
-
-        <!-- Segunda fila: Gráfica Individual -->
-        <div class="row" style="margin-top: 1rem;">
-          <div class="col-md-12">
-            <div class="card chart-card">
-              <div class="card-header chart-header-individual">
-                <h4>Reporte Individual</h4>
-              </div>
-              <div class="card-body">
-                <label for="empleadoSelectChart">Seleccione un empleado:</label>
-                <select id="empleadoSelectChart">
-                  <option value="">-- Seleccione --</option>
-                </select>
-                <canvas id="chartIndividual" width="400" height="400"></canvas>
-              </div>
-            </div>
-          </div>
+        <div>
+          <h4>Permisos por Departamento</h4>
+          <canvas id="chartDepartment"></canvas>
         </div>
-      </div>
-    `;
+        <div>
+          <h4>Permisos Mensuales (Empleado)</h4>
+          <label for="chartEmpleadoSelect">Empleado:</label>
+          <select id="chartEmpleadoSelect"><option value="">-- Seleccione --</option></select>
+          <canvas id="chartIndividual"></canvas>
+        </div>
+      </div>`;
 
     reporteContenidoEl.innerHTML = html;
-    initStatisticalReports();
+    initCharts();
   }
 
-  // --- Funciones de Reportes Estadísticos ---
-  function getAreaFromIdPermiso(id_permiso) {
-    for (const [area, code] of Object.entries(areaCodes)) {
-      if (id_permiso.startsWith(code)) {
-        return area;
-      }
-    }
-    return "Desconocido";
+  // ================================
+  //  Lógica real para poblar charts
+  // ================================
+  function getAreaFromIdPermiso(id) {
+    const code = id.slice(0, 2);
+    return Object.entries(areaCodes).find(([, c]) => c === code)?.[0] || 'Desconocido';
   }
-
-  function getDepartmentFromIdPermiso(id_permiso) {
-    for (const [area, deptMapping] of Object.entries(departmentCodes)) {
-      const areaCode = areaCodes[area];
-      if (id_permiso.startsWith(areaCode)) {
-        const deptCode = id_permiso.substr(areaCode.length, 2);
-        for (const [deptName, code] of Object.entries(deptMapping)) {
-          if (deptCode === code) {
-            return deptName;
-          }
-        }
-      }
-    }
-    return "Desconocido";
+  function getDepartmentFromIdPermiso(id) {
+    const areaKey = getAreaFromIdPermiso(id);
+    const dm = departmentCodes[areaKey] || {};
+    const code = id.slice(2, 4);
+    return Object.entries(dm).find(([, c]) => c === code)?.[0] || 'Desconocido';
   }
-
   function generateAreaReport(data) {
-    const areaCounts = {};
-    data.forEach(item => {
-      const area = getAreaFromIdPermiso(item.id_permiso);
-      areaCounts[area] = (areaCounts[area] || 0) + 1;
+    const cnt = {};
+    data.forEach(x => {
+      const a = getAreaFromIdPermiso(x.id_permiso);
+      cnt[a] = (cnt[a] || 0) + 1;
     });
-    return {
-      labels: Object.keys(areaCounts),
-      values: Object.values(areaCounts)
-    };
+    return { labels: Object.keys(cnt), values: Object.values(cnt) };
   }
-
   function generateDepartmentReport(data) {
-    const deptCounts = {};
-    data.forEach(item => {
-      const dept = getDepartmentFromIdPermiso(item.id_permiso);
-      deptCounts[dept] = (deptCounts[dept] || 0) + 1;
+    const cnt = {};
+    data.forEach(x => {
+      const d = getDepartmentFromIdPermiso(x.id_permiso);
+      cnt[d] = (cnt[d] || 0) + 1;
     });
-    return {
-      labels: Object.keys(deptCounts),
-      values: Object.values(deptCounts)
-    };
+    return { labels: Object.keys(cnt), values: Object.values(cnt) };
+  }
+  function generateMonthlyReport(data) {
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const cnt = Array(12).fill(0);
+    data.forEach(x => {
+      const m = parseInt(x.fecha_solicitud.slice(5, 7), 10);
+      if (m >= 1 && m <= 12) cnt[m - 1]++;
+    });
+    return { labels: meses, values: cnt };
   }
 
-  function generateIndividualReport(data, empleadoId) {
-    const monthlyCounts = {};
-    data.forEach(item => {
-      const parts = item.id_permiso.split('-');
-      if (parts.length < 2) return;
-      const empNum = parseInt(parts[1], 10);
-      if (empNum === parseInt(empleadoId, 10)) {
-        if (item.fecha_solicitud && typeof item.fecha_solicitud === 'string') {
-          const month = item.fecha_solicitud.substr(5, 2);
-          monthlyCounts[month] = (monthlyCounts[month] || 0) + 1;
-        }
-      }
-    });
-    const labels = Object.keys(monthlyCounts).sort();
-    const values = labels.map(label => monthlyCounts[label]);
-    return { labels, values };
+  let pieAreaChart, pieDeptChart, barEmpChart;
+
+  function updateMonthlyChart(empId) {
+    const filtered = empId
+      ? todasLasSolicitudes.filter(s => s.id_permiso.endsWith(`-${empId}`))
+      : [];
+    const monthly = generateMonthlyReport(filtered);
+    const newMax = Math.max(...monthly.values, 6);
+    barEmpChart.data.datasets[0].data = monthly.values;
+    barEmpChart.options.scales.y.max = newMax;
+    barEmpChart.update();
   }
 
-  function createPieChart(ctx, labels, data) {
-    return new Chart(ctx, {
+  function initCharts() {
+    // 1) Áreas
+    const areaStats = generateAreaReport(todasLasSolicitudes);
+    if (pieAreaChart) pieAreaChart.destroy();
+    pieAreaChart = new Chart(
+      document.getElementById('chartArea'), {
       type: 'pie',
       data: {
-        labels: labels,
-        datasets: [{
-          data: data,
+        labels: areaStats.labels, datasets: [{
+          data: areaStats.values,
+          backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
+        }]
+      },
+      options: { responsive: true, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Solicitudes por Área' } } }
+    });
+
+    // 2) Departamentos
+    const deptStats = generateDepartmentReport(todasLasSolicitudes);
+    if (pieDeptChart) pieDeptChart.destroy();
+    pieDeptChart = new Chart(
+      document.getElementById('chartDepartment'), {
+      type: 'pie',
+      data: {
+        labels: deptStats.labels, datasets: [{
+          data: deptStats.values,
           backgroundColor: [
-            '#FF6384', '#36A2EB', '#FFCE56',
-            '#4BC0C0', '#9966FF', '#66FF66', '#FF6666'
+            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+            '#FF9F40', '#4D5360', '#C9CBCF', '#8A89A6', '#A1DE93'
           ]
         }]
       },
-      options: {}
+      options: { responsive: true, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Permisos por Departamento' } } }
     });
-  }
 
-  function createBarChart(ctx, labels, data) {
-    return new Chart(ctx, {
+    // 3) Mensual - Empleado
+    const empty = generateMonthlyReport([]);
+    if (barEmpChart) barEmpChart.destroy();
+    barEmpChart = new Chart(
+      document.getElementById('chartIndividual'), {
       type: 'bar',
-      data: {
-        labels: labels,
-        datasets: [{
-          label: 'Permisos',
-          data: data,
-          backgroundColor: '#36A2EB'
-        }]
-      },
+      data: { labels: empty.labels, datasets: [{ label: 'Permisos', data: empty.values, backgroundColor: '#FFCE56' }] },
       options: {
+        responsive: true,
+        aspectRatio: 1,     // 1:1 → gráfica cuadrada
+        plugins: {
+          legend: { position: 'top' },
+          title: { display: true, text: 'Permisos Mensuales (Empleado)' }
+        },
         scales: {
-          y: {
-            beginAtZero: true
-          }
+          x: { title: { display: true, text: 'Mes' } },
+          y: { beginAtZero: true, title: { display: true, text: 'Cantidad' } }
         }
       }
+
     });
+
+    // Sincronizar top-select y chart-select
+    const topSel = document.getElementById('empleados-select');
+    const chartSel = document.getElementById('chartEmpleadoSelect');
+    function onEmpChange(e) {
+      const id = e.target.value;
+      topSel.value = id;
+      chartSel.value = id;
+      updateMonthlyChart(id);
+    }
+    topSel.addEventListener('change', onEmpChange);
+
+    // Poblamos chart-select
+    chartSel.innerHTML = '<option value="">-- Seleccione --</option>';
+    empleados.forEach(emp => {
+      chartSel.innerHTML += `<option value="${emp.id_usuario}">${emp.nombre}</option>`;
+    });
+    chartSel.addEventListener('change', onEmpChange);
   }
 
-  let individualChart;
+  // -----------------------------
+  // Exponer handlers
+  // -----------------------------
+  window.handleGeneralClick = handleGeneralClick;
+  window.handleDepartmentClick = handleDepartmentClick;
+  window.handleEmployeeSelection = handleEmployeeSelection;
+  window.handleFiltrarPorFecha = handleFiltrarPorFecha;
+  window.exportToExcel = exportToExcel;
 
-  function updateIndividualChart(empleadoId) {
-    const ctxIndiv = document.getElementById('chartIndividual').getContext('2d');
-    if (individualChart) {
-      individualChart.destroy();
-    }
-    if (!empleadoId) {
-      ctxIndiv.clearRect(0, 0, ctxIndiv.canvas.width, ctxIndiv.canvas.height);
-      return;
-    }
-    const indivReportData = generateIndividualReport(todasLasSolicitudes, empleadoId);
-    individualChart = createBarChart(ctxIndiv, indivReportData.labels, indivReportData.values);
-  }
-
-  function initStatisticalReports() {
-    const selectEl = document.getElementById('empleadoSelectChart');
-    if (selectEl) {
-      selectEl.innerHTML = `<option value="">-- Seleccione --</option>`;
-      empleados.forEach(empleado => {
-        selectEl.innerHTML += `<option value="${empleado.id_usuario}">${empleado.nombre}</option>`;
-      });
-      selectEl.addEventListener('change', () => {
-        updateIndividualChart(selectEl.value);
-      });
-    }
-    if (todasLasSolicitudes && todasLasSolicitudes.length > 0) {
-      const areaReportData = generateAreaReport(todasLasSolicitudes);
-      const ctxArea = document.getElementById('chartArea').getContext('2d');
-      createPieChart(ctxArea, areaReportData.labels, areaReportData.values);
-      const deptReportData = generateDepartmentReport(todasLasSolicitudes);
-      const ctxDept = document.getElementById('chartDepartment').getContext('2d');
-      createPieChart(ctxDept, deptReportData.labels, deptReportData.values);
-      updateIndividualChart(selectEl.value);
-    }
-  }
-
-  // --- Exponer funciones para los manejadores inline ---
-  window.generalClickHandler = (area) => {
-    handleGeneralClick(area);
-  };
-
-  window.departmentClickHandler = (area, department) => {
-    handleDepartmentClick(area, department);
-  };
-
-  window.employeeSelectionHandler = (event) => {
-    handleEmployeeSelection(event);
-  };
-
-  window.filtrarPorFechaHandler = () => {
-    handleFiltrarPorFecha();
-  };
-
-  window.exportToExcelHandler = () => {
-    exportToExcel();
-  };
-
-  // Renderizados iniciales
+  // Render inicial
   renderPrimaryMenu();
   renderReporteContent();
 
   // -----------------------------
-  // SOLUCIÓN DINÁMICA: Portal para submenús en modo colapsado
+  // Portal dinámico (sin cambios)
   // -----------------------------
   let portal = document.getElementById("portal-submenu");
   if (!portal) {
     portal = document.createElement("div");
     portal.id = "portal-submenu";
-    portal.style.position = "fixed";
-    portal.style.top = "0";
-    portal.style.left = "0";
-    portal.style.width = "100%";
-    portal.style.height = "100%";
-    portal.style.pointerEvents = "none";
+    portal.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;";
     document.body.appendChild(portal);
   }
-
-  document.querySelectorAll(".dropdown-container").forEach((container) => {
+  document.querySelectorAll(".dropdown-container").forEach(container => {
     const submenu = container.querySelector(".dropdown-menu");
-    const portalDropdown = document.createElement("div");
-    portalDropdown.className = "portal-dropdown";
-    const clonedMenu = submenu.cloneNode(true);
-    clonedMenu.style.display = "block";
-    portalDropdown.appendChild(clonedMenu);
-    portalDropdown.style.position = "fixed";
-    portalDropdown.style.display = "none";
-    portalDropdown.style.pointerEvents = "auto";
-    portal.appendChild(portalDropdown);
-
+    const pd = document.createElement("div");
+    pd.className = "portal-dropdown";
+    const clone = submenu.cloneNode(true);
+    clone.style.display = "block";
+    pd.appendChild(clone);
+    pd.style.position = "fixed";
+    pd.style.pointerEvents = "auto";
+    pd.style.display = "none";
+    portal.appendChild(pd);
     let hideTimeout;
-    const showDropdown = () => {
+    function show() {
       if (!document.querySelector(".sidebar").classList.contains("collapsed")) return;
-      const rect = container.getBoundingClientRect();
-      let leftPos = rect.right - 2;
-      let topPos = rect.top;
-      portalDropdown.style.display = "block";
-      const ddWidth = portalDropdown.offsetWidth;
-      const ddHeight = portalDropdown.offsetHeight;
-      if (leftPos + ddWidth > window.innerWidth) {
-        leftPos = rect.left - ddWidth + 2;
-        if (leftPos < 0) leftPos = 0;
-      }
-      if (topPos + ddHeight > window.innerHeight) {
-        topPos = window.innerHeight - ddHeight - 10;
-        if (topPos < 0) topPos = 0;
-      }
-      portalDropdown.style.left = leftPos + "px";
-      portalDropdown.style.top = topPos + "px";
-      portalDropdown.style.display = "block";
-    };
-    const hideDropdown = () => {
-      portalDropdown.style.display = "none";
-    };
-
-    container.addEventListener("mouseenter", () => {
-      clearTimeout(hideTimeout);
-      showDropdown();
-    });
-    container.addEventListener("mouseleave", () => {
-      hideTimeout = setTimeout(hideDropdown, 200);
-    });
-    portalDropdown.addEventListener("mouseenter", () => {
-      clearTimeout(hideTimeout);
-      showDropdown();
-    });
-    portalDropdown.addEventListener("mouseleave", () => {
-      hideTimeout = setTimeout(hideDropdown, 200);
-    });
+      const r = container.getBoundingClientRect();
+      let left = r.right - 2, top = r.top;
+      pd.style.display = "block";
+      const w = pd.offsetWidth, h = pd.offsetHeight;
+      if (left + w > innerWidth) left = r.left - w + 2;
+      if (top + h > innerHeight) top = innerHeight - h - 10;
+      pd.style.left = `${Math.max(0, left)}px`;
+      pd.style.top = `${Math.max(0, top)}px`;
+    }
+    function hide() { pd.style.display = "none"; }
+    container.addEventListener("mouseenter", () => { clearTimeout(hideTimeout); show(); });
+    container.addEventListener("mouseleave", () => { hideTimeout = setTimeout(hide, 200); });
+    pd.addEventListener("mouseenter", () => { clearTimeout(hideTimeout); show(); });
+    pd.addEventListener("mouseleave", () => { hideTimeout = setTimeout(hide, 200); });
   });
 });
