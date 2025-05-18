@@ -1,47 +1,56 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <title>Iniciar sesión</title>
   <!-- Estilos: Ruta desde la raíz -->
-  <link rel="stylesheet" href="../Css/Login.css" />  <!-- Cambiado a "Login.css" (mayúscula) -->
+  <link rel="stylesheet" href="../Css/Login.css" /> <!-- Cambiado a "Login.css" (mayúscula) -->
 
   <!-- Script: Ruta desde la raíz -->
-  <script type="module" src="../JS/Login.js"></script>  <!-- Cambiado a "Login.js" (mayúscula) -->
+  <script type="module" src="../JS/Login.js"></script> <!-- Cambiado a "Login.js" (mayúscula) -->
+  <!-- SweetAlert2 -->
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 </head>
+
 <body>
   <div class="login-background">
     <div class="login-container">
-      <!-- Imagen: Usa una URL externa o ajusta la ruta local -->
-      <img 
-        src="https://cdn-icons-png.flaticon.com/512/1077/1077063.png" 
-        alt="Logo" 
-        class="logo"
-      />
-      <h1 class="login-title">Iniciar sesión</h1>
-      
-      <input
-        id="emailInput"
-        type="email"
-        placeholder="Ingresa tu correo"
-        class="login-input"
-      />
-
-      <input
-        id="passwordInput"
-        type="password"
-        placeholder="Ingresa tu contraseña"
-        class="login-input"
-      />
-
-      <p id="errorMessage" class="error-message" style="display: none;"></p>
-
-      <button id="loginButton" class="login-button">
-        Iniciar sesión
-      </button>
-
-      <p class="forgot-password">¿Olvidaste tu contraseña?</p>
+      <div class="wrapper">
+        <div class="card-switch">
+          <label class="switch">
+            <input type="checkbox" class="toggle" id="toggleCreateAccount">
+            <span class="slider"></span>
+            <span class="card-side"></span>
+            <div class="flip-card__inner">
+              <!-- LOGIN -->
+              <div class="flip-card__front">
+                <div class="title">Iniciar Sesión</div>
+                <form class="flip-card__form" onsubmit="return false">
+                  <input class="flip-card__input" id="emailInput" placeholder="Correo" type="email" />
+                  <input class="flip-card__input" id="passwordInput" placeholder="Contraseña" type="password" />
+                  <button class="flip-card__btn" id="loginButton">Entrar</button>
+                </form>
+              </div>
+              <!-- REGISTRO -->
+              <div class="flip-card__back">
+                <div class="title">Crear Cuenta</div>
+                <form class="flip-card__form" onsubmit="return false">
+                  <input class="flip-card__input" id="signupEmail" placeholder="Correo" type="email" />
+                  <input class="flip-card__input" id="signupPassword" placeholder="Contraseña" type="password" />
+                  <input class="flip-card__input" id="confirmPasswordInput" placeholder="Confirmar Contraseña"
+                    type="password" />
+                  <button class="flip-card__btn" id="signupButton">Confirmar</button>
+                </form>
+              </div>
+            </div>
+          </label>
+        </div>
+      </div>
     </div>
   </div>
+
 </body>
+
 </html>
