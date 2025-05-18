@@ -260,15 +260,20 @@ document.addEventListener('DOMContentLoaded', () => {
       html += `<ul class="solicitudes-lista">`;
       solicitudes.forEach(s => {
         html += `
-          <li class="solicitud-item">
-            <p><strong>Nombre:</strong> ${s.nombre_empleado}</p>
-            <p><strong>Motivo:</strong> ${s.motivo_falta}</p>
-            <p><strong>Fecha:</strong> ${s.fecha_solicitud}</p>
-            <p><strong>Tipo:</strong> ${s.tipo_permiso}</p>
-            <p><strong>Horario:</strong> ${s.horario_laboral}</p>
-            <p><strong>Jefe:</strong> ${s.jefe_autoriza_permiso}</p>
-            <p><strong>Puesto:</strong> ${s.puesto_empleado}</p>
-          </li>`;
+  <li class="solicitud-item">
+    <p><strong>Nombre:</strong> ${s.nombre_empleado}</p>
+    <p><strong>Motivo:</strong> ${s.motivo_falta}</p>
+    <p><strong>Fecha:</strong> ${s.fecha_solicitud}</p>
+    <p><strong>Tipo:</strong> ${s.tipo_permiso}</p>
+    <p><strong>Horario:</strong> ${s.horario_laboral}</p>
+    <p><strong>Jefe:</strong> ${s.jefe_autoriza_permiso}</p>
+    <p><strong>Puesto:</strong> ${s.puesto_empleado}</p>
+    ${Array.isArray(s.archivos_adjuntos) && s.archivos_adjuntos.length > 0
+            ? `<button onclick='verArchivosAdjuntos(${JSON.stringify(s.archivos_adjuntos)})'>Ver archivo${s.archivos_adjuntos.length > 1 ? 's' : ''}</button>`
+            : ''
+          }
+  </li>`;
+
       });
       html += `</ul>`;
     } else {
@@ -479,3 +484,19 @@ document.addEventListener('DOMContentLoaded', () => {
     pd.addEventListener("mouseleave", () => { hideTimeout = setTimeout(hide, 200); });
   });
 });
+window.verArchivosAdjuntos = function (archivos) {
+  archivos.forEach((archivo, index) => {
+    const win = window.open();
+    if (win) {
+      win.document.title = archivo.nombre || `Archivo ${index + 1}`;
+      win.document.body.innerHTML = `
+        <h2>${archivo.nombre}</h2>
+        ${
+          archivo.tipo.includes("pdf")
+            ? `<embed src="${archivo.contenido_base64}" type="application/pdf" width="100%" height="90%"/>`
+            : `<img src="${archivo.contenido_base64}" style="max-width:100%; max-height:90vh;" />`
+        }
+      `;
+    }
+  });
+};

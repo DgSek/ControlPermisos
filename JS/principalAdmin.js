@@ -102,7 +102,7 @@ function renderEmployees(employeesList) {
     employeesContainer.innerHTML = '<p>No se encontraron usuarios</p>';
     return;
   }
-  
+
   let html = '';
   employeesList.forEach(usuario => {
     const { nombre, Area, Departamento, Foto, id_usuario } = usuario;
@@ -111,7 +111,7 @@ function renderEmployees(employeesList) {
     if (deptMap[Area]) {
       deptName = deptMap[Area][Departamento] || `Depto. desconocido (${Departamento})`;
     }
-    
+
     html += `
       <div class="card">
         <div class="card-info">
@@ -158,15 +158,15 @@ async function buscarUsuario(queryText) {
   const empleadosRef = collection(db, "empleados");
   const idSnapshot = await getDocs(query(empleadosRef, where('id_usuario', '>=', queryText), where('id_usuario', '<=', queryText + '\uf8ff')));
   const nombreSnapshot = await getDocs(query(empleadosRef, where('nombre', '>=', queryText), where('nombre', '<=', queryText + '\uf8ff')));
-  
+
   const usuariosPorId = idSnapshot.docs.map(doc => doc.data());
   const usuariosPorNombre = nombreSnapshot.docs.map(doc => doc.data());
-  
+
   const mapUnicos = new Map();
   [...usuariosPorId, ...usuariosPorNombre].forEach(usuario => {
     mapUnicos.set(usuario.id_usuario, usuario);
   });
-  
+
   let resultadosUnicos = Array.from(mapUnicos.values());
   resultadosUnicos.sort((a, b) => a.nombre.localeCompare(b.nombre));
   renderEmployees(resultadosUnicos);
@@ -331,7 +331,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (document.getElementById('areaSeleccionada')) {
     populateAreaSelect();
   }
-  
+
   await fetchAreaMap();
   await fetchDeptMap();
   await fetchAllEmployees();
@@ -456,16 +456,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 });
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => resolve(reader.result); // incluye tipo MIME
+    reader.onerror = error => reject(error);
+  });
+}
+
 
 // --- FUNCIONES PARA ENVIAR SOLICITUD ---
 async function enviarSolicitud() {
   const form = document.getElementById('form-permiso');
   if (!currentEmpSolicitud ||
-      !currentEmpSolicitud.id_usuario ||
-      !currentEmpSolicitud.nombre ||
-      !currentEmpSolicitud.puesto ||
-      !currentEmpSolicitud.Area ||
-      !currentEmpSolicitud.Departamento) {
+    !currentEmpSolicitud.id_usuario ||
+    !currentEmpSolicitud.nombre ||
+    !currentEmpSolicitud.puesto ||
+    !currentEmpSolicitud.Area ||
+    !currentEmpSolicitud.Departamento) {
     alert("Faltan datos del empleado. Verifique la información.");
     return;
   }
@@ -476,7 +485,7 @@ async function enviarSolicitud() {
   const puesto = currentEmpSolicitud.puesto;
   const areaId = currentEmpSolicitud.Area;
   const departamentoId = currentEmpSolicitud.Departamento;
-  
+
   const idPermiso = `${areaId}${departamentoId}${numeroPermiso}-${id_usuario}`;
   const fechaSolicitud = new Date().toISOString();
 
@@ -509,7 +518,18 @@ async function enviarSolicitud() {
       horas_falta: horasFalta,
       jefe_autoriza_permiso: jefeAutoriza,
       puesto_jefe_autoriza: puestoJefeAutoriza,
-      archivos_adjuntos: archivosAdjuntos.map(file => file.name),
+      archivos_adjuntos: await Promise.all(
+        archivosAdjuntos.map(async (file) => {
+          const base64 = await fileToBase64(file);
+          return {
+            nombre: file.name,
+            tipo: file.type,
+            contenido_base64: base64
+          };
+        })
+      ),
+
+
       fecha_solicitud: fechaSolicitud
     });
     alert(`Solicitud enviada exitosamente con ID: ${idPermiso}`);
@@ -538,7 +558,7 @@ function closeModalEmpleado() {
   currentEmployeeDocId = null;
 }
 
-window.addEventListener('click', function(event) {
+window.addEventListener('click', function (event) {
   if (event.target.id === 'modalSolicitud') {
     closeModalSolicitud();
   }
