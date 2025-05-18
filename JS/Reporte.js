@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </a>
           <ul class="dropdown-menu">
             <li class="nav-item">
-              <a href="#" class="nav-link dropdown-link" onclick="handleGeneralClick('${area}')">
+              <a href="javascript:void(0)" class="nav-link dropdown-link" onclick="handleGeneralClick('${area}')">
                 General
               </a>
             </li>`;
@@ -217,7 +217,7 @@ document.addEventListener('DOMContentLoaded', () => {
         for (const dept in departmentCodes[area]) {
           html += `
             <li class="nav-item">
-              <a href="#" class="nav-link dropdown-link" onclick="handleDepartmentClick('${area}','${dept}')">
+              <a href="javascript:void(0)" class="nav-link dropdown-link" onclick="handleDepartmentClick('${area}','${dept}')">
                 ${dept}
               </a>
             </li>`;

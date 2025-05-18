@@ -569,8 +569,10 @@ window.addEventListener('click', function (event) {
 
 // --- OTRAS FUNCIONES Y ASIGNACIÓN DE EVENTOS GLOBALES ---
 window.verDetalles = function (idUsuario) {
-  window.location.href = `detallesEmpleados.html?id_usuario=${idUsuario}`;
+  localStorage.setItem("idUsuario", idUsuario);
+  window.location.href = "detallesEmpleados.html";
 };
+
 
 window.openModalEmpleado = openModalEmpleado;
 window.openModalSolicitud = openModalSolicitud;

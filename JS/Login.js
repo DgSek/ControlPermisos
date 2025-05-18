@@ -36,12 +36,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const userData = querySnapshot.docs[0].data();
         const tipoUsuario = userData.tipo_usuario;
 
-        await Swal.fire('Bienvenido', 'Inicio de sesión exitoso.', 'success');
+        await Swal.fire({
+          title: 'Bienvenido',
+          text: 'Inicio de sesión exitoso.',
+          icon: 'success',
+          timer: 1000, // 2 segundos
+          timerProgressBar: true,
+          showConfirmButton: false
+        });
 
         if (tipoUsuario === 'admin') {
-          window.location.href = `principalAdmin.html?nombre=${encodeURIComponent(userData.nombre)}`;
+          localStorage.setItem("nombreUsuario", userData.nombre);
+          window.location.href = "principalAdmin.html";
+
         } else if (tipoUsuario === 'usuario') {
-          window.location.href = `detallesEmpleadosU.html?id_usuario=${userData.id_usuario}`;
+          localStorage.setItem("idUsuario", userData.id_usuario);
+          window.location.href = "detallesEmpleadosU.html";
+
         } else {
           Swal.fire('Error', 'Tipo de usuario no reconocido.', 'error');
         }

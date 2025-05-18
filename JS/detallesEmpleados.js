@@ -7,8 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
   container.innerHTML = `<p>Cargando información del empleado...</p>`;
 
   // Obtener el id_usuario desde la query string
-  const paramsURL = new URLSearchParams(window.location.search);
-  const id_usuario = paramsURL.get('id_usuario');
+  const id_usuario = localStorage.getItem('idUsuario');
 
   if (!id_usuario) {
     container.innerHTML = `<p>No se encontró información del empleado.</p>`;
