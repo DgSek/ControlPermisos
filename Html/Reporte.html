@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <title>Reporte</title>
@@ -8,27 +9,23 @@
   <link rel="stylesheet" href="../Css/principalAdmin.css" />
   <link rel="stylesheet" href="../Css/Reporte.css" />
   <!-- Fuentes e iconos -->
-  <link
-    rel="stylesheet"
-    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
-  />
-  <link
-    rel="stylesheet"
-    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded"
-  />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded" />
   <!-- Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <!-- JS principal -->
   <script type="module" src="../JS/Reporte.js"></script>
 </head>
+
 <body>
   <div class="app-container">
     <!-- Sidebar -->
     <aside class="sidebar collapsed">
       <header class="sidebar-header">
-        <a href="#" class="header-logo">
-          <img src="/Imagenes/logo.png" alt="Logo" />
+        <a href="./principalAdmin.html" class="header-logo" title="Volver al inicio">
+          <img src="/Imagenes/logo.png" alt="Logo" class="sidebar-logo" />
         </a>
+
         <button class="sidebar-toggler">
           <span class="material-symbols-rounded">chevron_left</span>
         </button>
@@ -65,9 +62,7 @@
   </div>
 
   <!-- Portal para submenús colapsados -->
-  <div
-    id="portal-submenu"
-    style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none;"
-  ></div>
+  <div id="portal-submenu" style="position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none;"></div>
 </body>
+
 </html>

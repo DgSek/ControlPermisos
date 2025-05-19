@@ -149,9 +149,6 @@ document.addEventListener('DOMContentLoaded', () => {
               <p><strong>Teléfono:</strong> ${empleado.numero_telefono || "No disponible"}</p>
               <p><strong>Correo electrónico:</strong> ${empleado.correo || "No disponible"}</p>
             </div>
-            <button class="btn-solicitar-permiso" id="btn-solicitar-permiso">
-              Solicitar Permiso
-            </button>
           </div>
         </div>
       </div>
@@ -159,16 +156,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Evento para redirigir a la pantalla de solicitud de permiso
     const btn = document.getElementById('btn-solicitar-permiso');
-    btn.addEventListener('click', () => {
-      const params = new URLSearchParams();
-      params.set('id_usuario', empleado.id_usuario);
-      params.set('nombre', empleado.nombre);
-      params.set('puesto', empleado.puesto);
-      params.set('areaId', empleado.Area);
-      params.set('departamentoId', empleado.Departamento);
-      params.set('numeroPermiso', numeroPermiso);
-      window.location.href = `solicitudPermiso.html?${params.toString()}`;
-    });
+if (btn) {
+  btn.addEventListener('click', () => {
+    const params = new URLSearchParams();
+    params.set('id_usuario', empleado.id_usuario);
+    params.set('nombre', empleado.nombre);
+    params.set('puesto', empleado.puesto);
+    params.set('areaId', empleado.Area);
+    params.set('departamentoId', empleado.Departamento);
+    params.set('numeroPermiso', numeroPermiso);
+    window.location.href = `solicitudPermiso.html?${params.toString()}`;
+  });
+}
+
   }
 
   // Ejecutar la función principal para obtener y renderizar la información

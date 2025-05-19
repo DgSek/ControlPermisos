@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
     // Funciones de navegación
     function handleRegistroClick() {
-       window.location.href = '/ControlPermisos/Html/Login.html'; // Ejemplo si está en /Html/
+       window.location.href = 'HTML/Login.html';
     }
   
     function handlePreguntasClick() {

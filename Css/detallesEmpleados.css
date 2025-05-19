@@ -1,5 +1,4 @@
 .detalles-empleados {
-    padding: 20px;
     background-color: #f8f9fa;
     min-height: 100vh;
     display: flex;
@@ -45,18 +44,27 @@
     font-weight: bold;
   }
   
-  .info-secundaria {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-  
+.info-secundaria {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  grid-column: span 3;
+  align-items: stretch; /* Esto fuerza igual altura */
+}
+
   .info-subseccion {
-    background-color: #ffffff;
-    border-radius: 10px;
-    padding: 15px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  }
+  flex: 1 1 calc(33.33% - 20px);
+  max-width: calc(33.33% - 20px);
+  background-color: #ffffff;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column; /* necesario si hay varios elementos internos */
+  justify-content: space-between;
+}
   
   .info-subseccion h2 {
     font-size: 18px; /* Aumentar tamaño de los títulos */
@@ -105,5 +113,30 @@
     .btn-solicitar-permiso {
       grid-column: span 1;
     }
+    .info-subseccion {
+    flex: 1 1 calc(33.33% - 20px); /* Se reparten en 3 columnas con espacio */
+    max-width: calc(33.33% - 20px);
+    box-sizing: border-box;
+}
+
+/* Ajuste para tablets y móviles */
+@media (max-width: 1024px) {
+  .info-subseccion {
+    flex: 1 1 calc(50% - 20px);
+    max-width: calc(50% - 20px);
+  }
+}
+
+@media (max-width: 600px) {
+  .info-secundaria {
+    flex-direction: column;
+  }
+
+  .info-subseccion {
+    flex: 1 1 100%;
+    max-width: 100%;
+  }
+}
+
   }
   

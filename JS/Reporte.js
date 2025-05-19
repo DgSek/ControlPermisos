@@ -198,38 +198,52 @@ document.addEventListener('DOMContentLoaded', () => {
   //   Render del menú lateral
   // ================================
   function renderPrimaryMenu() {
-    let html = '';
-    for (const area in areaCodes) {
-      html += `
-        <li class="nav-item dropdown-container">
-          <a href="#" class="nav-link dropdown-toggle">
-            <span class="material-symbols-rounded">folder</span>
-            <span class="nav-label">${area}</span>
-            <span class="dropdown-icon material-symbols-rounded">keyboard_arrow_down</span>
-          </a>
-          <ul class="dropdown-menu">
-            <li class="nav-item">
-              <a href="javascript:void(0)" class="nav-link dropdown-link" onclick="handleGeneralClick('${area}')">
-                General
-              </a>
-            </li>`;
-      if (departmentCodes[area]) {
-        for (const dept in departmentCodes[area]) {
-          html += `
-            <li class="nav-item">
-              <a href="javascript:void(0)" class="nav-link dropdown-link" onclick="handleDepartmentClick('${area}','${dept}')">
-                ${dept}
-              </a>
-            </li>`;
-        }
+  const areaIcons = {
+    'Dirección General': 'account_balance',
+    'Subdirección de planeación y vinculación': 'insights',
+    'Subdirección de servicios administrativos': 'build',
+    'Subdirección académica': 'school',
+    'Docentes': 'groups'
+  };
+
+  let html = '';
+  for (const area in areaCodes) {
+    const icon = areaIcons[area] || 'folder';
+
+    html += `
+      <li class="nav-item dropdown-container">
+        <a href="#" class="nav-link dropdown-toggle">
+          <span class="material-symbols-rounded">${icon}</span>
+          <span class="nav-label">${area}</span>
+          <span class="dropdown-icon material-symbols-rounded">keyboard_arrow_down</span>
+        </a>
+        <ul class="dropdown-menu">
+          <li class="nav-item">
+            <a href="javascript:void(0)" class="nav-link dropdown-link" onclick="handleGeneralClick('${area}')">
+              General
+            </a>
+          </li>`;
+
+    if (departmentCodes[area]) {
+      for (const dept in departmentCodes[area]) {
+        html += `
+          <li class="nav-item">
+            <a href="javascript:void(0)" class="nav-link dropdown-link" onclick="handleDepartmentClick('${area}','${dept}')">
+              ${dept}
+            </a>
+          </li>`;
       }
-      html += `
-          </ul>
-        </li>`;
     }
-    primaryMenuEl.innerHTML = html;
-    bindDropdownToggles();
+
+    html += `
+        </ul>
+      </li>`;
   }
+
+  primaryMenuEl.innerHTML = html;
+  bindDropdownToggles();
+}
+
 
   // ================================
   //   Render de tarjetas + gráficas
@@ -491,10 +505,9 @@ window.verArchivosAdjuntos = function (archivos) {
       win.document.title = archivo.nombre || `Archivo ${index + 1}`;
       win.document.body.innerHTML = `
         <h2>${archivo.nombre}</h2>
-        ${
-          archivo.tipo.includes("pdf")
-            ? `<embed src="${archivo.contenido_base64}" type="application/pdf" width="100%" height="90%"/>`
-            : `<img src="${archivo.contenido_base64}" style="max-width:100%; max-height:90vh;" />`
+        ${archivo.tipo.includes("pdf")
+          ? `<embed src="${archivo.contenido_base64}" type="application/pdf" width="100%" height="90%"/>`
+          : `<img src="${archivo.contenido_base64}" style="max-width:100%; max-height:90vh;" />`
         }
       `;
     }
