@@ -366,3 +366,6 @@ body, html {
   cursor: pointer;
   border-radius: 4px;
 }
+.swal2-container {
+  z-index: 10000 !important;
+}

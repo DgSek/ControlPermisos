@@ -2,6 +2,8 @@
 import { db } from '../BD/firebaseConfig.js';
 import { collection, doc, getDoc, getDocs, query, where, updateDoc, addDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 
+// SweetAlert2
+import Swal from 'https://cdn.jsdelivr.net/npm/sweetalert2@11/+esm';
 // VARIABLES GLOBALES PARA GESTIONAR EMPLEADOS Y SOLICITUDES
 let allEmployees = [];
 let areaMap = {};
@@ -272,17 +274,18 @@ async function guardarEmpleado() {
   try {
     if (currentEmployeeDocId) {
       await updateDoc(doc(db, "empleados", currentEmployeeDocId), empleadoData);
-      alert("Empleado actualizado correctamente");
+      await Swal.fire("Actualizado", "Empleado actualizado correctamente", "success");
     } else {
       await addDoc(collection(db, "empleados"), empleadoData);
-      alert("Empleado agregado correctamente");
+      await Swal.fire("Agregado", "Empleado agregado correctamente", "success");
     }
     window.location.href = '/PrincipalAdmin.html';
   } catch (error) {
     console.error("Error al guardar el empleado:", error);
-    alert("Hubo un error al guardar el empleado.");
+    await Swal.fire("Error", "Hubo un error al guardar el empleado.", "error");
   }
 }
+
 
 function cargarEmpleado(emp) {
   document.getElementById('correo').value = emp.correo || '';
@@ -471,16 +474,20 @@ function fileToBase64(file) {
 // --- FUNCIONES PARA ENVIAR SOLICITUD ---
 async function enviarSolicitud() {
   const form = document.getElementById('form-permiso');
+  const btnEnviar = document.getElementById("btnEnviarSolicitud");
+  btnEnviar.disabled = true;
+
   if (!currentEmpSolicitud ||
     !currentEmpSolicitud.id_usuario ||
     !currentEmpSolicitud.nombre ||
     !currentEmpSolicitud.puesto ||
     !currentEmpSolicitud.Area ||
     !currentEmpSolicitud.Departamento) {
-    alert("Faltan datos del empleado. Verifique la información.");
+    await Swal.fire("Datos incompletos", "Faltan datos del empleado. Verifica la información.", "warning");
+    botonEnviar.disabled = false;
     return;
   }
-  // Se usa un valor fijo para numeroPermiso; ajústalo según tu lógica
+
   const numeroPermiso = "1";
   const id_usuario = currentEmpSolicitud.id_usuario;
   const nombre = currentEmpSolicitud.nombre;
@@ -489,9 +496,11 @@ async function enviarSolicitud() {
   const departamentoId = currentEmpSolicitud.Departamento;
 
   const idPermiso = `${areaId}${departamentoId}${numeroPermiso}-${id_usuario}`;
-  const fechaSolicitud = new Date().toISOString();
 
-  // Obtener valores de los campos del formulario
+  // ✅ Fecha en hora local de Sonora (UTC-7)
+  const fechaSolicitud = new Date().toLocaleString("en-US", { timeZone: "America/Hermosillo" });
+
+  // Obtener valores del formulario
   const motivoFalta = document.getElementById('motivoFalta').value;
   const horarioLaboral = document.getElementById('horarioLaboral').value;
   const fechaInicio = document.getElementById('fechaInicio').value;
@@ -530,20 +539,24 @@ async function enviarSolicitud() {
           };
         })
       ),
-
-
-      fecha_solicitud: fechaSolicitud
+      fecha_solicitud: new Date(new Date().toLocaleString("en-US", { timeZone: "America/Hermosillo" })) // fecha correcta
     });
-    alert(`Solicitud enviada exitosamente con ID: ${idPermiso}`);
+
+    await Swal.fire("Éxito", `Solicitud enviada exitosamente con ID: ${idPermiso}`, "success");
+
     form.reset();
     archivosAdjuntos = [];
     document.getElementById('horasFalta').disabled = true;
     closeModalSolicitud();
+
   } catch (error) {
     console.error("Error al enviar la solicitud:", error);
-    alert("Error al enviar la solicitud.");
+    await Swal.fire("Error", "Hubo un error al enviar la solicitud.", "error");
+  } finally {
+    btnEnviar.disabled = false;
   }
 }
+
 
 // --- FUNCIONES PARA CERRAR MODALES ---
 function closeModalSolicitud() {
@@ -597,7 +610,11 @@ function mostrarListaArchivos() {
 }
 
 function eliminarArchivo(index) {
+  const archivoEliminado = archivosAdjuntos[index];
   archivosAdjuntos.splice(index, 1);
   mostrarListaArchivos();
+  Swal.fire("Archivo eliminado", `${archivoEliminado.name} ha sido removido.`, "info");
 }
-window.eliminarArchivo = eliminarArchivo;
+
+
+
