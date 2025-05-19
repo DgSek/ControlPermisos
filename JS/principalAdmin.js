@@ -421,7 +421,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     fileInput.addEventListener('change', (event) => {
       const files = Array.from(event.target.files);
       archivosAdjuntos = archivosAdjuntos.concat(files);
+      mostrarListaArchivos();
     });
+
   }
 
   // Configurar el input de "horas de la falta"
@@ -580,3 +582,22 @@ window.closeModalEmpleado = closeModalEmpleado;
 window.closeModalSolicitud = closeModalSolicitud;
 window.guardarEmpleado = guardarEmpleado;
 window.enviarSolicitud = enviarSolicitud;
+
+function mostrarListaArchivos() {
+  const lista = document.getElementById('listaArchivos');
+  lista.innerHTML = '';
+  archivosAdjuntos.forEach((archivo, index) => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      ${archivo.name}
+      <button onclick="eliminarArchivo(${index})">Eliminar</button>
+    `;
+    lista.appendChild(li);
+  });
+}
+
+function eliminarArchivo(index) {
+  archivosAdjuntos.splice(index, 1);
+  mostrarListaArchivos();
+}
+window.eliminarArchivo = eliminarArchivo;

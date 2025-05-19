@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <title>Principal Admin</title>
@@ -9,10 +10,12 @@
   <link rel="stylesheet" href="../Css/sideBar.css" />
   <!-- Font Awesome y Google Fonts para iconos -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
   <!-- Solo se importa principalAdmin.js, ya que toda la lógica está allí -->
   <script type="module" src="../JS/principalAdmin.js"></script>
 </head>
+
 <body>
   <div class="app-container">
     <!-- Sidebar (menú lateral) -->
@@ -231,6 +234,8 @@
           </label>
           <button type="button" onclick="enviarSolicitud()">Enviar</button>
         </div>
+        <!-- Contenedor para lista de archivos seleccionados -->
+        <ul id="listaArchivos" class="lista-archivos"></ul>
       </form>
     </div>
   </div>
@@ -312,4 +317,5 @@
     </div>
   </div>
 </body>
+
 </html>

@@ -343,3 +343,26 @@ body, html {
   button:hover {
     background-color: #0056b3;
   }
+
+  .lista-archivos {
+  list-style: none;
+  padding: 0;
+  margin-top: 10px;
+}
+.lista-archivos li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #f0f0f0;
+  padding: 5px 10px;
+  margin-bottom: 5px;
+  border-radius: 4px;
+}
+.lista-archivos button {
+  background: red;
+  color: white;
+  border: none;
+  padding: 2px 8px;
+  cursor: pointer;
+  border-radius: 4px;
+}
