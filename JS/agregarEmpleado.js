@@ -258,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
         await addDoc(collection(db, 'empleados'), empleadoData);
         alert("Empleado agregado correctamente");
       }
-      window.location.href = '/PrincipalAdmin.html';
+      window.location.href = '/principalAdmin.html';
     } catch (error) {
       console.error("Error al guardar el empleado:", error);
       alert("Hubo un error al guardar el empleado.");

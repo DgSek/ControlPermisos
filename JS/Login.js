@@ -1,7 +1,8 @@
 import { auth, db } from '../BD/firebaseConfig.js';
 import {
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword
+  createUserWithEmailAndPassword,
+  sendPasswordResetEmail
 } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
 
 import {
@@ -40,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
           title: 'Bienvenido',
           text: 'Inicio de sesión exitoso.',
           icon: 'success',
-          timer: 1000, // 2 segundos
+          timer: 1000, // 1 segundos
           timerProgressBar: true,
           showConfirmButton: false
         });
@@ -105,4 +106,20 @@ document.addEventListener('DOMContentLoaded', () => {
       Swal.fire('Error', 'Error al crear la cuenta. Intenta nuevamente.', 'error');
     }
   });
+});
+document.getElementById('forgotPassword').addEventListener('click', async () => {
+  const email = document.getElementById('emailInput').value.trim();
+
+  if (!email) {
+    Swal.fire('Correo requerido', 'Por favor, escribe tu correo en el campo.', 'info');
+    return;
+  }
+
+  try {
+    await sendPasswordResetEmail(auth, email);
+    Swal.fire('Correo enviado', 'Revisa tu bandeja para restablecer la contraseña.', 'success');
+  } catch (error) {
+    console.error('Password reset error:', error.message);
+    Swal.fire('Error', 'No se pudo enviar el correo. ¿Está bien escrito?', 'error');
+  }
 });
