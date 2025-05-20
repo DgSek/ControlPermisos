@@ -1,16 +1,146 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <title>Detalles del Empleado</title>
 
-  <link rel="stylesheet" href="../Css/detallesEmpleados.css" /> 
+  <!-- Estilos -->
+  <link rel="stylesheet" href="../Css/detallesEmpleados.css" />
 
+  <!-- Script principal -->
   <script type="module" src="../JS/detallesEmpleados.js"></script>
 </head>
+
 <body>
+
+  <!-- Contenedor del perfil -->
   <div id="detalles-empleados-container">
-    <!-- Aquí se renderizará el contenido -->
+    <!-- Aquí se inyectará el perfil del empleado dinámicamente -->
   </div>
+
+  <!-- Modal flotante para reportes -->
+  <div id="modal-reportes" class="modal hidden">
+    <div class="modal-content">
+      <span class="close-button" id="cerrar-modal-reportes">&times;</span>
+      <h2>Reportes del empleado</h2>
+      <div id="lista-reportes"></div>
+    </div>
+  </div>
+
+  <!-- Modal de Modificación de Permiso -->
+  <div id="modalModificarPermiso" class="modal hidden">
+    <div class="modal-content">
+      <span class="close-button" id="cerrar-modal-modificar">&times;</span>
+      <h2>Modificar Permiso</h2>
+      <form id="form-modificar-permiso" class="form-permiso">
+        <input type="hidden" id="idPermisoModificar" />
+
+        <!-- Datos del empleado -->
+        <div class="form-group">
+          <div>
+            <label>Nombre del empleado</label>
+            <input type="text" id="modNombreEmpleado" readonly />
+          </div>
+          <div>
+            <label>Puesto del empleado</label>
+            <input type="text" id="modPuestoEmpleado" readonly />
+          </div>
+        </div>
+
+        <!-- Fechas -->
+        <div class="form-group">
+          <div>
+            <label>Fecha de inicio</label>
+            <input type="date" id="modFechaInicio" required />
+          </div>
+          <div>
+            <label>Fecha de fin</label>
+            <input type="date" id="modFechaFin" required />
+          </div>
+        </div>
+
+        <!-- Motivo y horario -->
+        <div class="form-group">
+          <div>
+            <label>Motivo de la falta</label>
+            <input type="text" id="modMotivo" required />
+          </div>
+          <div>
+            <label>Horario de trabajo</label>
+            <input type="text" id="modHorario" />
+          </div>
+        </div>
+
+        <!-- Tipo y horas -->
+        <div class="form-group">
+          <div>
+            <label>Tipo de permiso</label>
+            <select id="modTipo" required>
+              <option value="">Selecciona</option>
+              <option value="Sindical">Sindical</option>
+              <option value="Personal">Personal</option>
+              <option value="Parcial">Parcial</option>
+            </select>
+          </div>
+          <div>
+            <label>Horas de la falta</label>
+            <input type="text" id="modHorasFalta" placeholder="Ej: 7:00-9:00" />
+          </div>
+        </div>
+
+        <!-- Autorización -->
+        <div class="form-group">
+          <div>
+            <label>Tipo de autorización</label>
+            <select id="modAutorizacion">
+              <option value="">Selecciona</option>
+              <option value="Con goce de sueldo">Con goce de sueldo</option>
+              <option value="Sin goce de sueldo">Sin goce de sueldo</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Jefe inmediato -->
+        <div class="form-group">
+          <div>
+            <label>Nombre del jefe inmediato</label>
+            <select id="modNombreJefe">
+              <option value="">Selecciona un jefe</option>
+            </select>
+          </div>
+          <div>
+            <label>Puesto del jefe inmediato</label>
+            <select id="modPuestoJefe">
+              <option value="">Selecciona un puesto</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Jefe que autoriza -->
+        <div class="form-group">
+          <div>
+            <label>Jefe que autoriza el permiso</label>
+            <select id="modNombreAutoriza">
+              <option value="">Selecciona un jefe</option>
+            </select>
+          </div>
+          <div>
+            <label>Puesto del jefe que autoriza</label>
+            <select id="modPuestoAutoriza">
+              <option value="">Selecciona un puesto</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Botón de guardar -->
+        <div class="form-group button-container">
+          <button type="submit">Guardar Cambios</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
 </body>
+
 </html>

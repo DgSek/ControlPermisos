@@ -1,176 +1,261 @@
 // Importamos los métodos de Firebase necesarios y la configuración
 import { db } from '../BD/firebaseConfig.js';
-import { collection, doc, getDoc, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+import {
+  collection, doc, getDoc, query, where,
+  getDocs, deleteDoc, updateDoc
+} from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('detalles-empleados-container');
-  container.innerHTML = `<p>Cargando información del empleado...</p>`;
-
-  // Obtener el id_usuario desde la query string
   const id_usuario = localStorage.getItem('idUsuario');
+  if (!id_usuario) return container.innerHTML = `<p>No se encontró información del empleado.</p>`;
 
-  if (!id_usuario) {
-    container.innerHTML = `<p>No se encontró información del empleado.</p>`;
-    return;
-  }
+  const jefesInmediatos = [
+    "ARQ. JESUS RAFAEL SANCHEZ SEBREROS",
+    "C.P ALVARO MARTIN PEREZ MANJARREZ",
+    "LIC. MARITZA JOANA LOPEZ MARTINEZ",
+    "LIC. SAUL MADERO TORRES",
+    "LIC. LUIS PEREZ VALENZUELA",
+    "C.P DAVID ALEJANDRO SOTO GRIJALVA",
+    "PSIC. LAURA FANI SILVA RIOS",
+    "MDE. CLAUDIA ISABEL PONCE OROZCO",
+    "ING. RODRIGO GARCIA HERNANDEZ",
+    "ING. MARCO ANTONIO PEREZ ELIAS",
+    "MTRO. GABRIEL RIVERA SOLIS",
+    "LIC. LUCIA HERNANDEZ SOTO",
+    "LIC. SAMANTHA FATIMA SANTANA HERNANDEZ",
+    "LIC. CELIA YADIRA SOTELO CASTRO",
+    "LIC. DULCE JAQUELINE CORRAL CUADRAS"
+  ];
 
-  // Función principal para obtener los datos del empleado
-  async function fetchEmployeeData() {
+  const puestosJefes = [
+    "DIRECTOR GENERAL",
+    "SUBDIRECCION DE SERVICIOS ADMINISTRATIVOS",
+    "SUBDIRECCION DE PLANEACION Y VINCULACION",
+    "SUBDIRECCION ACADEMICA"
+  ];
+
+  const formatearFecha = (fecha) => {
+    if (fecha?.seconds) return new Date(fecha.seconds * 1000).toISOString().split("T")[0];
+    if (typeof fecha === 'string') return new Date(fecha).toISOString().split("T")[0];
+    return '';
+  };
+
+  const cargarReportes = async (id_usuario) => {
+    const lista = document.getElementById('lista-reportes');
+    lista.innerHTML = "<p>Cargando reportes...</p>";
+
     try {
-      // Consultar la colección 'empleados' por id_usuario
-      const qEmpleados = query(
-        collection(db, 'empleados'),
-        where('id_usuario', '==', id_usuario)
-      );
-      const querySnapshotEmpleados = await getDocs(qEmpleados);
-      
-      if (querySnapshotEmpleados.empty) {
-        container.innerHTML = `<p>No se encontró información del empleado.</p>`;
-        return;
-      }
+      const q = query(collection(db, 'solicitud'), where('id_usuario', '==', id_usuario));
+      const snapshot = await getDocs(q);
 
-      const empleadoData = querySnapshotEmpleados.docs[0].data();
+      if (snapshot.empty) return lista.innerHTML = "<p>No se encontraron reportes.</p>";
 
-      // Obtener el nombre del área
-      const areaNombre = await fetchAreaNombre(empleadoData.Area);
-      // Obtener el nombre del departamento
-      const departamentoNombre = await fetchDepartamentoNombre(empleadoData.Area, empleadoData.Departamento);
-      // Contar las solicitudes por tipo
-      const contadores = await contarSolicitud(id_usuario);
-
-      renderEmployee(empleadoData, areaNombre, departamentoNombre, contadores);
-    } catch (error) {
-      console.error("Error al obtener datos:", error);
-      container.innerHTML = `<p>Error al obtener información del empleado.</p>`;
-    }
-  }
-
-  // Función para obtener el nombre del área
-  async function fetchAreaNombre(areaId) {
-    try {
-      const areaDoc = await getDoc(doc(db, 'areas', 'doc'));
-      if (areaDoc.exists()) {
-        const areaData = areaDoc.data();
-        const areaNombre = Object.keys(areaData).find(key => areaData[key] === areaId);
-        return areaNombre || "No disponible";
-      }
-    } catch (error) {
-      console.error("Error al obtener el nombre del área:", error);
-    }
-    return "No disponible";
-  }
-
-  // Función para obtener el nombre del departamento
-  async function fetchDepartamentoNombre(areaId, departamentoId) {
-    try {
-      let departamentoNombre = "No disponible";
-
-      if (areaId === "A4") {
-        const docenteDoc = await getDoc(doc(db, 'departamentos', areaId, 'Docentes', 'A5'));
-        if (docenteDoc.exists()) {
-          const docenteData = docenteDoc.data();
-          departamentoNombre = Object.keys(docenteData).find(key => docenteData[key] === departamentoId) || "No disponible";
-        }
-      } else {
-        const departamentoDoc = await getDoc(doc(db, 'departamentos', areaId));
-        if (departamentoDoc.exists()) {
-          const departamentoData = departamentoDoc.data();
-          departamentoNombre = Object.keys(departamentoData).find(key => departamentoData[key] === departamentoId) || "No disponible";
-        }
-      }
-      return departamentoNombre;
-    } catch (error) {
-      console.error("Error al obtener el nombre del departamento:", error);
-    }
-    return "No disponible";
-  }
-
-  // Función para contar las solicitudes de permiso por tipo
-  async function contarSolicitud(id_usuario) {
-    try {
-      const qSolicitudes = query(
-        collection(db, 'solicitud'),
-        where('id_usuario', '==', id_usuario)
-      );
-      const querySnapshotSolicitud = await getDocs(qSolicitudes);
-      const contadores = { Personal: 0, Sindical: 0, Parcial: 0 };
-
-      querySnapshotSolicitud.forEach(docSnap => {
+      let html = '<ul>';
+      snapshot.forEach(docSnap => {
         const data = docSnap.data();
-        if (contadores[data.tipo_permiso] !== undefined) {
-          contadores[data.tipo_permiso]++;
-        }
-      });
-      return contadores;
-    } catch (error) {
-      console.error("Error al contar solicitudes:", error);
-      return { Personal: 0, Sindical: 0, Parcial: 0 };
-    }
-  }
+        const fecha = formatearFecha(data.fecha_solicitud);
+        const verArchivoBtn = Array.isArray(data.archivos_adjuntos) && data.archivos_adjuntos.length > 0
+          ? `<button onclick='verArchivosAdjuntos(${JSON.stringify(data.archivos_adjuntos)})'>📄</button>` : '';
 
-  // Función para renderizar la información del empleado en el DOM
-  function renderEmployee(empleado, areaNombre, departamentoNombre, contadores) {
-    const defaultImage = 'ruta/a/imagen/predeterminada.jpg';
-    const fechaIngreso = empleado.fecha_contratacion 
-      ? new Date(empleado.fecha_contratacion.seconds * 1000).toLocaleDateString() 
-      : "No disponible";
-    // Calcular el número de permiso a asignar
-    const numeroPermiso = contadores.Personal + contadores.Sindical + contadores.Parcial + 1;
+        html += `
+          <li class="reporte-item">
+            <p><strong>Motivo:</strong> ${data.motivo_falta}</p>
+            <p><strong>Fecha:</strong> ${fecha}</p>
+            <p><strong>Tipo:</strong> ${data.tipo_permiso}</p>
+            <button onclick="modificarReporte('${docSnap.id}')">✏️</button>
+            <button onclick="eliminarReporte('${docSnap.id}')">🗑️</button>
+            ${verArchivoBtn}
+          </li>`;
+      });
+      html += '</ul>';
+      lista.innerHTML = html;
+    } catch (e) {
+      console.error("Error al cargar reportes:", e);
+      lista.innerHTML = "<p>Error al cargar reportes.</p>";
+    }
+  };
+
+  window.verArchivosAdjuntos = (archivos) => {
+    archivos.forEach((archivo, index) => {
+      const win = window.open();
+      win.document.title = archivo.nombre || `Archivo ${index + 1}`;
+      win.document.body.innerHTML = archivo.tipo.includes("pdf")
+        ? `<embed src="${archivo.contenido_base64}" type="application/pdf" width="100%" height="90%"/>`
+        : `<img src="${archivo.contenido_base64}" style="max-width:100%; max-height:90vh;" />`;
+    });
+  };
+
+  window.eliminarReporte = async (id) => {
+    if (confirm("¿Eliminar este reporte?")) {
+      try {
+        await deleteDoc(doc(db, 'solicitud', id));
+        await cargarReportes(id_usuario);
+      } catch (e) {
+        alert("Error al eliminar.");
+      }
+    }
+  };
+
+  document.getElementById('cerrar-modal-modificar').addEventListener('click', () => {
+    document.getElementById('modalModificarPermiso').classList.add('hidden');
+  });
+
+  const llenarCombos = (combo, opciones, seleccionado) => {
+    combo.innerHTML = '<option value="">Selecciona</option>';
+    opciones.forEach(op => {
+      const opt = document.createElement('option');
+      opt.value = opt.textContent = op;
+      if (op === seleccionado) opt.selected = true;
+      combo.appendChild(opt);
+    });
+  };
+
+  window.modificarReporte = async (id) => {
+    try {
+      const docSnap = await getDoc(doc(db, 'solicitud', id));
+      if (!docSnap.exists()) return alert("Reporte no encontrado");
+
+      const data = docSnap.data();
+      document.getElementById('modalModificarPermiso').classList.remove('hidden');
+
+      document.getElementById('idPermisoModificar').value = id;
+      document.getElementById('modMotivo').value = data.motivo_falta || '';
+      document.getElementById('modTipo').value = data.tipo_permiso || '';
+      document.getElementById('modHorario').value = data.horario_laboral || '';
+      document.getElementById('modFechaInicio').value = formatearFecha(data.rango_fechas?.inicio);
+      document.getElementById('modFechaFin').value = formatearFecha(data.rango_fechas?.fin);
+      document.getElementById('modHorasFalta').value = data.horas_falta || '';
+      document.getElementById('modNombreEmpleado').value = data.nombre_empleado || '';
+      document.getElementById('modPuestoEmpleado').value = data.puesto_empleado || '';
+
+      llenarCombos(document.getElementById('modNombreJefe'), jefesInmediatos, data.nombre_jefe_inmediato);
+      llenarCombos(document.getElementById('modPuestoJefe'), puestosJefes, data.puesto_jefe_inmediato);
+      llenarCombos(document.getElementById('modNombreAutoriza'), jefesInmediatos, data.jefe_autoriza_permiso);
+      llenarCombos(document.getElementById('modPuestoAutoriza'), puestosJefes, data.puesto_jefe_autoriza);
+      llenarCombos(document.getElementById('modAutorizacion'), ["Con goce de sueldo", "Sin goce de sueldo"], data.autorizacion_goce_sueldo);
+
+      const tipoPermisoSelect = document.getElementById('modTipo');
+      const horasInput = document.getElementById('modHorasFalta');
+      horasInput.disabled = tipoPermisoSelect.value !== 'Parcial';
+      tipoPermisoSelect.addEventListener('change', () => {
+        horasInput.disabled = tipoPermisoSelect.value !== 'Parcial';
+      });
+    } catch (e) {
+      console.error("Error al cargar datos del permiso:", e);
+    }
+  };
+
+  document.getElementById('form-modificar-permiso').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id = document.getElementById('idPermisoModificar').value;
+
+    try {
+      await updateDoc(doc(db, 'solicitud', id), {
+        motivo_falta: document.getElementById('modMotivo').value,
+        tipo_permiso: document.getElementById('modTipo').value,
+        horario_laboral: document.getElementById('modHorario').value,
+        rango_fechas: {
+          inicio: document.getElementById('modFechaInicio').value,
+          fin: document.getElementById('modFechaFin').value,
+        },
+        horas_falta: document.getElementById('modHorasFalta').value,
+        autorizacion_goce_sueldo: document.getElementById('modAutorizacion').value,
+        nombre_empleado: document.getElementById('modNombreEmpleado').value,
+        puesto_empleado: document.getElementById('modPuestoEmpleado').value,
+        nombre_jefe_inmediato: document.getElementById('modNombreJefe').value,
+        puesto_jefe_inmediato: document.getElementById('modPuestoJefe').value,
+        jefe_autoriza_permiso: document.getElementById('modNombreAutoriza').value,
+        puesto_jefe_autoriza: document.getElementById('modPuestoAutoriza').value
+      });
+
+      alert("Actualizado correctamente.");
+      document.getElementById('modalModificarPermiso').classList.add('hidden');
+      await cargarReportes(id_usuario);
+    } catch (err) {
+      alert("No se pudo actualizar el permiso.");
+      console.error(err);
+    }
+  });
+
+  const fetchEmployeeData = async () => {
+    try {
+      const qEmpleados = query(collection(db, 'empleados'), where('id_usuario', '==', id_usuario));
+      const querySnapshot = await getDocs(qEmpleados);
+      if (querySnapshot.empty) return container.innerHTML = `<p>No se encontró información del empleado.</p>`;
+
+      const data = querySnapshot.docs[0].data();
+      const area = await getDoc(doc(db, 'areas', 'doc'));
+      const areaNombre = area.exists() ? Object.keys(area.data()).find(k => area.data()[k] === data.Area) : 'No disponible';
+
+      const dep = await getDoc(doc(db, 'departamentos', data.Area));
+      const departamentoNombre = dep.exists() ? Object.keys(dep.data()).find(k => dep.data()[k] === data.Departamento) : 'No disponible';
+
+      const permisos = await contarSolicitud(id_usuario);
+      renderEmployee(data, areaNombre, departamentoNombre, permisos);
+    } catch (e) {
+      container.innerHTML = `<p>Error al obtener datos.</p>`;
+    }
+  };
+
+  const contarSolicitud = async (id_usuario) => {
+    const q = query(collection(db, 'solicitud'), where('id_usuario', '==', id_usuario));
+    const snap = await getDocs(q);
+    const contadores = { Personal: 0, Sindical: 0, Parcial: 0 };
+    snap.forEach(doc => contadores[doc.data().tipo_permiso]++);
+    return contadores;
+  };
+
+  const renderEmployee = (empleado, area, depto, permisos) => {
+    const fechaIngreso = formatearFecha(empleado.fecha_contratacion);
+    const fotoCruda = empleado.Foto || empleado.foto || '';
+const fotoUrl = (typeof fotoCruda === 'string' && fotoCruda.trim().length > 5)
+  ? fotoCruda.trim().replace(/^"|"$/g, '') // quita comillas dobles si están incrustadas
+  : 'https://via.placeholder.com/150';
+
+
 
     container.innerHTML = `
       <div class="detalles-empleados">
-        <div class="encabezado">
-          <h1>Perfil de Empleado</h1>
-        </div>
+        <div class="encabezado"><h1>Perfil de Empleado</h1></div>
         <div class="perfil-contenedor">
           <div class="seccion info-general">
-            <h2>Información general</h2>
-            <div class="info-item">
-              <img src="${empleado.Foto || defaultImage}" alt="Foto del Empleado" class="empleado-foto-grande">
-              <p class="empleado-nombre"><strong>Nombre:</strong> ${empleado.nombre || "No disponible"}</p>
-            </div>
+            <img src="${fotoUrl}" alt="Empleado" class="empleado-foto-grande">
+            <p><strong>Nombre:</strong> ${empleado.nombre}</p>
           </div>
           <div class="seccion info-secundaria">
             <div class="info-subseccion">
               <h2>Información</h2>
-              <p><strong>Área:</strong> ${areaNombre}</p>
-              <p><strong>Departamento:</strong> ${departamentoNombre}</p>
-              <p><strong>Puesto:</strong> ${empleado.puesto || "No disponible"}</p>
-              <p><strong>Fecha de Ingreso:</strong> ${fechaIngreso}</p>
+              <p><strong>Área:</strong> ${area}</p>
+              <p><strong>Departamento:</strong> ${depto}</p>
+              <p><strong>Puesto:</strong> ${empleado.puesto}</p>
+              <p><strong>Fecha de ingreso:</strong> ${fechaIngreso}</p>
             </div>
             <div class="info-subseccion">
-              <h2>Permisos solicitados</h2>
-              <p><strong>Personal:</strong> ${contadores.Personal}</p>
-              <p><strong>Sindical:</strong> ${contadores.Sindical}</p>
-              <p><strong>Parcial:</strong> ${contadores.Parcial}</p>
+              <h2>Permisos solicitados <span id="ver-reportes-icon" style="cursor:pointer;">🗂️</span></h2>
+              <p><strong>Personal:</strong> ${permisos.Personal}</p>
+              <p><strong>Sindical:</strong> ${permisos.Sindical}</p>
+              <p><strong>Parcial:</strong> ${permisos.Parcial}</p>
             </div>
             <div class="info-subseccion">
-              <h2>Información de contacto</h2>
-              <p><strong>Teléfono:</strong> ${empleado.numero_telefono || "No disponible"}</p>
-              <p><strong>Correo electrónico:</strong> ${empleado.correo || "No disponible"}</p>
+              <h2>Contacto</h2>
+              <p><strong>Teléfono:</strong> ${empleado.numero_telefono}</p>
+              <p><strong>Correo:</strong> ${empleado.correo}</p>
             </div>
           </div>
         </div>
       </div>
     `;
 
-    // Evento para redirigir a la pantalla de solicitud de permiso
-    const btn = document.getElementById('btn-solicitar-permiso');
-if (btn) {
-  btn.addEventListener('click', () => {
-    const params = new URLSearchParams();
-    params.set('id_usuario', empleado.id_usuario);
-    params.set('nombre', empleado.nombre);
-    params.set('puesto', empleado.puesto);
-    params.set('areaId', empleado.Area);
-    params.set('departamentoId', empleado.Departamento);
-    params.set('numeroPermiso', numeroPermiso);
-    window.location.href = `solicitudPermiso.html?${params.toString()}`;
-  });
-}
+    document.getElementById('ver-reportes-icon').addEventListener('click', () => {
+      document.getElementById('modal-reportes').classList.remove('hidden');
+      cargarReportes(id_usuario);
+    });
 
-  }
+    document.getElementById('cerrar-modal-reportes').addEventListener('click', () => {
+      document.getElementById('modal-reportes').classList.add('hidden');
+    });
+  };
 
-  // Ejecutar la función principal para obtener y renderizar la información
   fetchEmployeeData();
 });
