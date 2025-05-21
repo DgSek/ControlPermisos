@@ -162,10 +162,14 @@
             <label>Motivo de la falta</label>
             <input type="text" id="motivoFalta">
           </div>
-          <div>
-            <label>Horario de trabajo</label>
-            <input type="text" id="horarioLaboral">
-          </div>
+          <div style="flex:1; display:flex; flex-direction:column;">
+    <label>Inicio de jornada</label>
+    <input type="time" id="horarioInicio" required>
+  </div>
+  <div style="flex:1; display:flex; flex-direction:column;">
+    <label>Fin de jornada</label>
+    <input type="time" id="horarioFin" required>
+  </div>
         </div>
         <!-- Tipo de permiso y horas -->
         <div class="form-group">

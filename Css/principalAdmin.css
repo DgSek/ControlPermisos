@@ -13,10 +13,10 @@ body, html {
   background-color: white;
   overflow-x: hidden;
 }
+
 .app-container {
   display: flex;
   gap: 20px; /* Ajusta el espacio entre el sidebar y el contenido */
-  /* Si deseas que el contenido se expanda, puedes agregar flex: 1 al contenedor de contenido */
 }
 
 /* Contenedor general para el contenido (lado derecho) */
@@ -62,6 +62,7 @@ body, html {
   cursor: pointer;
 }
 
+/* Resultados del buscador */
 .search-results {
   background-color: white;
   border: 1px solid #ddd;
@@ -133,14 +134,43 @@ body, html {
 
 /* TARJETAS (Cards) */
 .card {
-  width: 100%; /* ⬅ hazla fluida, ocupará el ancho de su celda */
-  max-width: 220px; /* ⬅ controla que no se haga enorme */
+  position: relative; /* ← Añadido para posicionar el botón de eliminar */
+  width: 100%;        /* ⬅ fluida, ocupa ancho de su celda */
+  max-width: 220px;   /* ⬅ controla que no crezca demasiado */
   min-height: 254px;
   background: #f5f5f5;
   padding: 1.5rem 1rem;
   border-radius: 6px;
   box-sizing: border-box;
   transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+/* Botón de eliminar en esquina */
+.delete-btn {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  opacity: 0.3;
+  transition: opacity 0.2s ease, background-color 0.2s ease;
+  z-index: 2;
+}
+
+.delete-btn svg {
+  fill: #515F65;
+  transition: fill 0.2s ease;
+}
+
+.delete-btn:hover {
+  opacity: 1;
+  background-color: #515f6538 !important; /* color de fondo */
+}
+
+.delete-btn:hover svg {
+  fill: red !important; /* el icono en rojo al hover */
 }
 
 .card-info {
@@ -174,6 +204,7 @@ body, html {
   width: 100%;
   opacity: 0;
   transition: transform 0.2s ease, opacity 0.2s ease;
+  z-index: 1;
 }
 
 .card-social__item {
@@ -198,7 +229,6 @@ body, html {
   margin-bottom: 0.5rem;
   display: -webkit-box;
   -webkit-line-clamp: 2;       
-  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
@@ -237,118 +267,153 @@ body, html {
   fill: #232323;
   transform: scale(1.1);
 }
-/* =============================
-   Estilos para los modales personalizados
-   ============================= */
-   .custom-modal {
-    display: none; /* Oculto por defecto */
-    position: fixed;
-    z-index: 9999; /* Por encima de todo */
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0, 0, 0, 0.5); /* Fondo semitransparente */
-  }
-  
-  .custom-modal-content {
-    background-color: #fff;
-    margin: 10% auto; /* Centrado vertical y horizontal */
-    padding: 20px 30px;
-    border-radius: 10px;
-    width: 80%;
-    max-width: 800px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.3);
-    position: relative;
-  }
-  
-  .custom-close {
-    position: absolute;
-    right: 15px;
-    top: 10px;
-    font-size: 28px;
-    font-weight: bold;
-    cursor: pointer;
-  }
-  
-  .custom-close:hover {
-    color: #000;
-  }
-  
-  /* Estilos para los formularios dentro de los modales */
-  .form-permiso,
-  #formEmpleado {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .form-group,
-  .campo {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 15px;
-  }
-  
-  .form-group label,
-  .campo label {
-    font-weight: bold;
-    margin-bottom: 5px;
-    display: block;
-    color: #333;
-  }
-  
-  .form-group input[type="text"],
-  .form-group input[type="date"],
-  .form-group select,
-  .campo input,
-  .campo select {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    flex: 1;
-    min-width: 180px;
-  }
-  
-  .button-container {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .btn-adjuntar {
-    background-color: #4CAF50;
-    color: #fff;
-    padding: 8px 12px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-weight: bold;
-  }
-  
-  .btn-adjuntar:hover {
-    background-color: #45a049;
-  }
-  
-  button {
-    background-color: #007BFF;
-    color: #fff;
-    border: none;
-    padding: 10px 18px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-  }
-  
-  button:hover {
-    background-color: #0056b3;
-  }
 
-  .lista-archivos {
+/* =============================  
+   Estilos para los modales personalizados  
+   ============================= */
+.custom-modal {
+  display: none; /* Oculto por defecto */
+  position: fixed;
+  z-index: 9999; /* Por encima de todo */
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  overflow: auto;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* CENTRADO VERTICAL DEL MODAL DE EMPLEADO */
+/* Centrar verticalmente el modal de Solicitud de Permiso */
+#modalSolicitud .custom-modal-content {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-height: 90vh;
+  overflow-y: auto;
+  margin: 0;  /* Elimina cualquier margin residual */
+}
+
+
+.custom-modal-content {
+  background-color: #fff;
+  margin: 10% auto; /* este margin será ignorado por el selector anterior */
+  padding: 20px 30px;
+  border-radius: 10px;
+  width: 80%;
+  max-width: 800px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+  position: relative;
+}
+
+.custom-close {
+  position: absolute;
+  right: 15px;
+  top: 10px;
+  font-size: 28px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.custom-close:hover {
+  color: #000;
+}
+
+/* FORMULARIO PERMISO Y EMPLEADO: columnas */
+.form-permiso,
+#formEmpleado {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* RE-ESTILO FORM EMPLEADO: grid de 2 columnas */
+#modalEmpleado #formEmpleado {
+  display: grid !important;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 15px;
+}
+
+/* Cada campo */
+.form-group,
+.campo {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+#modalEmpleado #formEmpleado .campo {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+/* Que el botón abarque ambas columnas */
+#modalEmpleado #formEmpleado button {
+  grid-column: 1 / -1;
+}
+
+.form-group label,
+.campo label {
+  font-weight: bold;
+  margin-bottom: 5px;
+  display: block;
+  color: #333;
+}
+
+.form-group input[type="text"],
+.form-group input[type="date"],
+.form-group select,
+.campo input,
+.campo select {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  flex: 1;
+  min-width: 180px;
+}
+
+/* Controles de adjuntos y envío */
+.button-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.btn-adjuntar {
+  background-color: #4CAF50;
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-adjuntar:hover {
+  background-color: #45a049;
+}
+
+button {
+  background-color: #007BFF;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+.lista-archivos {
   list-style: none;
   padding: 0;
   margin-top: 10px;
 }
+
 .lista-archivos li {
   display: flex;
   justify-content: space-between;
@@ -358,6 +423,7 @@ body, html {
   margin-bottom: 5px;
   border-radius: 4px;
 }
+
 .lista-archivos button {
   background: red;
   color: white;
@@ -366,6 +432,8 @@ body, html {
   cursor: pointer;
   border-radius: 4px;
 }
+
+/* Asegura que SweetAlert siempre encima */
 .swal2-container {
   z-index: 10000 !important;
 }

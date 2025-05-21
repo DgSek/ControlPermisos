@@ -258,7 +258,16 @@ document.addEventListener('DOMContentLoaded', () => {
         await addDoc(collection(db, 'empleados'), empleadoData);
         alert("Empleado agregado correctamente");
       }
-      window.location.href = '/principalAdmin.html';
+
+      // ↓ ELIMINADO window.location.href
+      // window.location.href = '/principalAdmin.html';
+
+      // Opcional: Limpio el formulario para ingresar otro
+      formEmpleado.reset();
+      empleadoEncontrado = false;
+      documentoId = null;
+      mensajeEmpleado.textContent = "";
+
     } catch (error) {
       console.error("Error al guardar el empleado:", error);
       alert("Hubo un error al guardar el empleado.");

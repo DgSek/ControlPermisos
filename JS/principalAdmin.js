@@ -1,6 +1,6 @@
 // IMPORTACIONES DE FIREBASE Y MÉTODOS DE FIRESTORE
 import { db } from '../BD/firebaseConfig.js';
-import { collection, doc, getDoc, getDocs, query, where, updateDoc, addDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+import { collection, doc, getDoc, getDocs, query, where, updateDoc, addDoc, deleteDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 
 // SweetAlert2
 import Swal from 'https://cdn.jsdelivr.net/npm/sweetalert2@11/+esm';
@@ -114,8 +114,27 @@ function renderEmployees(employeesList) {
       deptName = deptMap[Area][Departamento] || `Depto. desconocido (${Departamento})`;
     }
 
-    html += `
-      <div class="card">
+     html += `
+  <div class="card">
+    <!-- botón de borrar en esquina, con onclick y cerrado -->
+    <button
+      class="delete-btn"
+      onclick="deleteEmployee('${id_usuario}')"
+      title="Eliminar empleado">
+      <!-- SVG de papelera -->
+      <svg xmlns="http://www.w3.org/2000/svg"
+           width="18" height="18"
+           viewBox="0 0 16 16" fill="currentColor">
+        <path d="M5.5 5.5A.5.5 0 0 1 6 5h4a.5.5 0 0 1 .5.5v8
+                 a1 1 0 0 1-1 1H6.5a1 1 0 0 1-1-1v-8z"/>
+        <path fill-rule="evenodd"
+              d="M4.118 4 4 4.059V13a2 2 0 0 0 2 2h4
+                 a2 2 0 0 0 2-2V4.059L11.882 4H4.118z
+                 M2.5 2a.5.5 0 0 1 .5-.5h10a.5.5
+                 0 0 1 .5.5V3h-11V2z"/>
+      </svg>
+    </button>
+        
         <div class="card-info">
           <div class="card-avatar">
             ${Foto ? `<img src="${Foto}" alt="${nombre}">` : ''}
@@ -126,6 +145,7 @@ function renderEmployees(employeesList) {
             <p>Departamento: ${deptName}</p>
           </div>
         </div>
+    
         <ul class="card-social">
           <li class="card-social__item" onclick="window.verDetalles('${id_usuario}')" title="Detalles del empleado">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
@@ -151,6 +171,22 @@ function renderEmployees(employeesList) {
   });
   employeesContainer.innerHTML = html;
 }
+async function deleteEmployee(id_usuario) {
+  const emp = allEmployees.find(e => String(e.id_usuario) === String(id_usuario));
+  if (!emp) { await Swal.fire('Error', 'Empleado no encontrado', 'error'); return; }
+  const resp = await Swal.fire({
+    title: `¿Eliminar a ${emp.nombre}?`, text: 'No hay vuelta atrás.', icon: 'warning',
+    showCancelButton: true, confirmButtonText: 'Sí, eliminar', cancelButtonText: 'Cancelar'
+  });
+  if (resp.isConfirmed) {
+    try {
+      await deleteDoc(doc(db, 'empleados', emp.id));
+      await Swal.fire('Eliminado', 'Empleado eliminado', 'success');
+      await fetchAllEmployees();
+    } catch (err) { console.error(err); await Swal.fire('Error', 'No se pudo eliminar', 'error'); }
+  }
+}
+window.deleteEmployee = deleteEmployee;
 
 async function buscarUsuario(queryText) {
   if (!queryText) {
@@ -477,41 +513,53 @@ async function enviarSolicitud() {
   const btnEnviar = document.getElementById("btnEnviarSolicitud");
   btnEnviar.disabled = true;
 
+  // Validación básica de datos de empleado
   if (!currentEmpSolicitud ||
-    !currentEmpSolicitud.id_usuario ||
-    !currentEmpSolicitud.nombre ||
-    !currentEmpSolicitud.puesto ||
-    !currentEmpSolicitud.Area ||
-    !currentEmpSolicitud.Departamento) {
+      !currentEmpSolicitud.id_usuario ||
+      !currentEmpSolicitud.nombre ||
+      !currentEmpSolicitud.puesto ||
+      !currentEmpSolicitud.Area ||
+      !currentEmpSolicitud.Departamento) {
     await Swal.fire("Datos incompletos", "Faltan datos del empleado. Verifica la información.", "warning");
-    botonEnviar.disabled = false;
+    btnEnviar.disabled = false;
     return;
   }
 
-  const numeroPermiso = "1";
-  const id_usuario = currentEmpSolicitud.id_usuario;
-  const nombre = currentEmpSolicitud.nombre;
-  const puesto = currentEmpSolicitud.puesto;
-  const areaId = currentEmpSolicitud.Area;
-  const departamentoId = currentEmpSolicitud.Departamento;
+  const numeroPermiso    = "1";
+  const id_usuario       = currentEmpSolicitud.id_usuario;
+  const nombre           = currentEmpSolicitud.nombre;
+  const puesto           = currentEmpSolicitud.puesto;
+  const areaId           = currentEmpSolicitud.Area;
+  const departamentoId   = currentEmpSolicitud.Departamento;
+  const idPermiso        = `${areaId}${departamentoId}${numeroPermiso}-${id_usuario}`;
+  const fechaSolicitud   = new Date().toLocaleString("en-US", { timeZone: "America/Hermosillo" });
 
-  const idPermiso = `${areaId}${departamentoId}${numeroPermiso}-${id_usuario}`;
-
-  // ✅ Fecha en hora local de Sonora (UTC-7)
-  const fechaSolicitud = new Date().toLocaleString("en-US", { timeZone: "America/Hermosillo" });
-
-  // Obtener valores del formulario
-  const motivoFalta = document.getElementById('motivoFalta').value;
-  const horarioLaboral = document.getElementById('horarioLaboral').value;
-  const fechaInicio = document.getElementById('fechaInicio').value;
-  const fechaFin = document.getElementById('fechaFin').value;
-  const tipoPermiso = document.getElementById('tipoPermiso').value;
-  const horasFalta = tipoPermiso === "Parcial" ? document.getElementById('horasFalta').value : null;
-  const autorizacion = document.getElementById('autorizacion').value;
-  const nombreJefe = document.getElementById('nombreJefe').value;
-  const puestoJefe = document.getElementById('puestoJefe').value;
-  const jefeAutoriza = document.getElementById('jefeAutoriza').value;
+  // Valores del formulario
+  const motivoFalta      = document.getElementById('motivoFalta').value;
+  const fechaInicio      = document.getElementById('fechaInicio').value;
+  const fechaFin         = document.getElementById('fechaFin').value;
+  const tipoPermiso      = document.getElementById('tipoPermiso').value;
+  const horasFalta       = tipoPermiso === "Parcial"
+                            ? document.getElementById('horasFalta').value
+                            : null;
+  const autorizacion     = document.getElementById('autorizacion').value;
+  const nombreJefe       = document.getElementById('nombreJefe').value;
+  const puestoJefe       = document.getElementById('puestoJefe').value;
+  const jefeAutoriza     = document.getElementById('jefeAutoriza').value;
   const puestoJefeAutoriza = document.getElementById('puestoJefeAutoriza').value;
+
+  // NUEVO: obtener y concatenar el horario en dos campos
+  const inicioEl = document.getElementById('horarioInicio');
+  const finEl    = document.getElementById('horarioFin');
+  if (!inicioEl || !finEl) {
+    console.error("Faltan los inputs 'horarioInicio' o 'horarioFin'");
+    await Swal.fire("Error interno", "No se encontraron los campos de horario", "error");
+    btnEnviar.disabled = false;
+    return;
+  }
+  const horaInicio     = inicioEl.value; // e.g. "07:00"
+  const horaFin        = finEl.value;    // e.g. "15:00"
+  const horarioLaboral = `${horaInicio}-${horaFin}`; // "07:00-15:00"
 
   try {
     await addDoc(collection(db, "solicitud"), {
@@ -539,7 +587,7 @@ async function enviarSolicitud() {
           };
         })
       ),
-      fecha_solicitud: new Date(new Date().toLocaleString("en-US", { timeZone: "America/Hermosillo" })) // fecha correcta
+      fecha_solicitud: new Date(new Date().toLocaleString("en-US", { timeZone: "America/Hermosillo" }))
     });
 
     await Swal.fire("Éxito", `Solicitud enviada exitosamente con ID: ${idPermiso}`, "success");
@@ -556,7 +604,6 @@ async function enviarSolicitud() {
     btnEnviar.disabled = false;
   }
 }
-
 
 // --- FUNCIONES PARA CERRAR MODALES ---
 function closeModalSolicitud() {

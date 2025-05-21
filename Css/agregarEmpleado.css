@@ -1,76 +1,93 @@
 .agregar-empleado-container {
-    max-width: 1000px;
-    margin: auto;
-    padding: 20px;
-    background-color: #ffffff;
-    border-radius: 10px;
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
-    font-family: Arial, sans-serif;
-  }
-  
-  h2 {
-    text-align: center;
-    color: #00509e;
-    margin-bottom: 20px;
-  }
-  
-  form {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 20px;
-  }
-  
-  .campo {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  label {
-    font-weight: bold;
-    color: #333;
-    margin-bottom: 5px;
-  }
-  
-  input,
-  select {
-    padding: 10px;
-    border-radius: 5px;
-    border: 1px solid #ddd;
-    font-size: 14px;
-  }
-  
-  button {
-    grid-column: span 2;
-    padding: 10px;
-    background-color: #00509e;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    font-weight: bold;
-  }
-  
-  button:hover {
-    background-color: #003f7f;
-  }
-  
-  .buscador {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 20px;
-  }
-  
-  .buscador input {
-    flex: 3;
-    padding: 10px;
-    border-radius: 5px;
-  }
-  
-  .buscador button {
-    flex: 1;
-    background-color: #00509e;
-    color: white;
-    border: none;
-    border-radius: 5px;
-  }
-  
+  max-width: 900px; /* reducido de 1000px */
+  margin: auto;
+  padding: 15px; /* reducido de 20px */
+  background-color: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+  font-family: Arial, sans-serif;
+}
+
+.agregar-empleado-container h2 {
+  text-align: center;
+  color: #00509e;
+  font-size: 2rem;   /* reducido de ~2rem */
+  margin-bottom: 20px; /* reducido de 20px */
+}
+
+/* FORM COMO GRID DE 2 COLUMNAS */
+.agregar-empleado-container form {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;           /* reducido de 20px */
+}
+
+/* Cada campo sigue vertical */
+.agregar-empleado-container .campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;            /* espaciado ligero entre label y control */
+}
+
+.agregar-empleado-container label {
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.agregar-empleado-container input,
+.agregar-empleado-container select {
+  padding: 10px;        /* reducido de 10px */
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  font-size: 14px;     /* reducido de 14px */
+}
+
+/* BUSCADOR FULL-WIDTH */
+.agregar-empleado-container .buscador {
+  grid-column: 1 / -1 !important;  /* ocupa ambas columnas */
+  display: grid !important;        /* grid de 2 celdas */
+  grid-template-columns: 3fr 1fr;
+  gap: 10px;                        /* reducido de 10px */
+  margin-bottom: 20px;             /* reducido de 20px */
+}
+
+.agregar-empleado-container .buscador input {
+  width: 100%;
+  padding: 8px;      /* reducido de 10px */
+  border-radius: 5px;
+  border: 1px solid #ddd;
+  font-size: 13px;
+}
+
+.agregar-empleado-container .buscador button {
+  width: 100%;
+  background-color: #00509e;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px;      /* reducido de 10px */
+  font-size: 16px;   /* ligero ajuste */
+  font-weight: bold;
+}
+
+/* BOTÓN GUARDAR FULL-WIDTH */
+.agregar-empleado-container form button {
+  grid-column: 1 / -1 !important;  /* ocupa todo el ancho */
+  padding: 8px;      /* reducido de 10px */
+  background-color: #00509e;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  font-size: 14px;   /* reducido de 16px */
+  font-weight: bold;
+}
+
+.agregar-empleado-container form button:hover {
+  background-color: #003f7f;
+}
+
+/* UTILIDAD PARA ELEMENTOS QUE QUIERAS FULL-WIDTH */
+.agregar-empleado-container .full-width {
+  grid-column: 1 / -1 !important;
+}
