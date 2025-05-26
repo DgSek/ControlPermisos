@@ -1,6 +1,7 @@
 // Importar configuración y métodos de Firebase Firestore
 import { db } from '../BD/firebaseConfig.js';
 import { collection, doc, getDocs, query, where, updateDoc, addDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+import Swal from 'https://cdn.jsdelivr.net/npm/sweetalert2@11/+esm';
 
 document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('agregar-empleado-container');
@@ -62,7 +63,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Renderizamos la interfaz
   container.innerHTML = `
     <div class="agregar-empleado-container">
-      <h2>Agregar o Modificar Empleado</h2>
+      <h2>Agregar Empleado</h2>
       <div class="buscador">
         <input type="text" id="busqueda" placeholder="Buscar por ID de usuario">
         <button type="button" id="btnBuscar">Buscar</button>
@@ -232,6 +233,122 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Función para guardar o actualizar el empleado
   async function handleGuardar() {
+    // 1) Correo válido
+    const correoVal = inputCorreo.value.trim();
+    const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!correoVal || !emailRe.test(correoVal)) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Correo inválido',
+        text: 'Ingresa un correo en formato válido.'
+      });
+      return;
+    }
+
+    // 2) ID usuario numérico
+    const idVal = inputIdUsuario.value.trim();
+    if (!/^\d+$/.test(idVal)) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'ID inválido',
+        text: 'El ID de usuario debe ser un número.'
+      });
+      return;
+    }
+
+    // 3) Nombre
+    const nombreVal = inputNombre.value.trim();
+    if (!nombreVal) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Falta nombre',
+        text: 'Ingresa el nombre del empleado.'
+      });
+      return;
+    }
+
+    // 4) Fecha de contratación
+    if (!inputFechaContratacion.value) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Falta fecha',
+        text: 'Selecciona la fecha de contratación.'
+      });
+      return;
+    }
+
+    // 5) Puesto
+    const puestoVal = inputPuesto.value.trim();
+    if (!puestoVal) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Falta puesto',
+        text: 'Ingresa el puesto del empleado.'
+      });
+      return;
+    }
+
+    // 6) Teléfono (638-104-6882 ó 638 104 6882 ó 6381046882)
+    const telVal = inputNumeroTelefono.value.trim();
+    const telRe = /^[0-9]{3}[- ]?[0-9]{3}[- ]?[0-9]{4}$/;
+    if (!telRe.test(telVal)) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Teléfono inválido',
+        text: 'Formatos aceptados: 638-104-6882, 638 104 6882 o 6381046882.'
+      });
+      return;
+    }
+
+    // 7) Área y departamento
+    if (!selectArea.value) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Falta área',
+        text: 'Selecciona un área.'
+      });
+      return;
+    }
+    if (!selectDepartamento.value) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Falta departamento',
+        text: 'Selecciona un departamento.'
+      });
+      return;
+    }
+
+    // 8) Si es Docentes, validar tipo de docente
+    if (selectArea.value === 'Docentes' && !selectDocente.value) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Falta tipo de docente',
+        text: 'Selecciona el tipo de docente.'
+      });
+      return;
+    }
+
+    // 9) Tipo de empleado
+    if (!selectTipoEmpleado.value) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'Falta tipo de empleado',
+        text: 'Selecciona el tipo de empleado.'
+      });
+      return;
+    }
+
+    // 10) Foto (URL) opcional: validar longitud mínima si no está vacía
+    const fotoVal = inputFoto.value.trim();
+    if (fotoVal && fotoVal.length < 5) {
+      await Swal.fire({
+        icon: 'warning',
+        title: 'URL inválida',
+        text: 'La URL de la foto parece incorrecta.'
+      });
+      return;
+    }
+
     const empleadoData = {
       id_usuario: inputIdUsuario.value.trim(),
       nombre: inputNombre.value.trim(),

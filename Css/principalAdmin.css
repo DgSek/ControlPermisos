@@ -437,3 +437,21 @@ button:hover {
 .swal2-container {
   z-index: 10000 !important;
 }
+
+#modalSolicitud .custom-modal-content,
+#modalEmpleado .custom-modal-content {
+  position: relative !important;
+  top: auto !important;
+  left: auto !important;
+  transform: none !important;
+  margin: 0 !important;       /* quitamos el margin:10% auto */
+}
+.custom-modal[style*="display: block"] {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+.custom-modal[style*="display: block"] .custom-modal-content {
+  max-height: 90vh;
+  overflow-y: auto;
+}

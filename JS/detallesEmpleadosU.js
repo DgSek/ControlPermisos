@@ -92,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         where('id_usuario', '==', id_usuario)
       );
       const querySnapshotSolicitud = await getDocs(qSolicitudes);
-      const contadores = { Personal: 0, Sindical: 0, Parcial: 0 };
+      const contadores = { Personal: 0, Salud: 0, Sindical: 0, Parcial: 0 };
       querySnapshotSolicitud.forEach(docSnap => {
         const data = docSnap.data();
         if (contadores[data.tipo_permiso] !== undefined) {
@@ -135,8 +135,9 @@ document.addEventListener('DOMContentLoaded', () => {
               <p><strong>Fecha de Ingreso:</strong> ${fechaIngreso}</p>
             </div>
             <div class="info-subseccion">
-              <h2>Permisos solicitados</h2>
+            <h2>Permisos solicitados</h2>
               <p><strong>Personal:</strong> ${contadores.Personal}</p>
+              <p><strong>Salud:</strong> ${contadores.Salud}</p>
               <p><strong>Sindical:</strong> ${contadores.Sindical}</p>
               <p><strong>Parcial:</strong> ${contadores.Parcial}</p>
             </div>

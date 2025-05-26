@@ -141,6 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
       tipoPermisoSelect.addEventListener('change', () => {
         horasInput.disabled = tipoPermisoSelect.value !== 'Parcial';
       });
+
     } catch (e) {
       console.error("Error al cargar datos del permiso:", e);
     }
@@ -201,17 +202,18 @@ document.addEventListener('DOMContentLoaded', () => {
   const contarSolicitud = async (id_usuario) => {
     const q = query(collection(db, 'solicitud'), where('id_usuario', '==', id_usuario));
     const snap = await getDocs(q);
-    const contadores = { Personal: 0, Sindical: 0, Parcial: 0 };
+    const contadores = { Personal: 0, Sindical: 0, Parcial: 0, Salud: 0 };
     snap.forEach(doc => contadores[doc.data().tipo_permiso]++);
     return contadores;
   };
 
+
   const renderEmployee = (empleado, area, depto, permisos) => {
     const fechaIngreso = formatearFecha(empleado.fecha_contratacion);
     const fotoCruda = empleado.Foto || empleado.foto || '';
-const fotoUrl = (typeof fotoCruda === 'string' && fotoCruda.trim().length > 5)
-  ? fotoCruda.trim().replace(/^"|"$/g, '') // quita comillas dobles si están incrustadas
-  : 'https://via.placeholder.com/150';
+    const fotoUrl = (typeof fotoCruda === 'string' && fotoCruda.trim().length > 5)
+      ? fotoCruda.trim().replace(/^"|"$/g, '') // quita comillas dobles si están incrustadas
+      : 'https://via.placeholder.com/150';
 
 
 
@@ -234,6 +236,7 @@ const fotoUrl = (typeof fotoCruda === 'string' && fotoCruda.trim().length > 5)
             <div class="info-subseccion">
               <h2>Permisos solicitados <span id="ver-reportes-icon" style="cursor:pointer;">🗂️</span></h2>
               <p><strong>Personal:</strong> ${permisos.Personal}</p>
+              <p><strong>Salud:</strong> ${permisos.Salud}</p>        <!-- ← nuevo -->
               <p><strong>Sindical:</strong> ${permisos.Sindical}</p>
               <p><strong>Parcial:</strong> ${permisos.Parcial}</p>
             </div>

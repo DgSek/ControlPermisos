@@ -314,6 +314,78 @@ async function guardarEmpleado() {
   const selectDocente = document.getElementById('docenteSeleccionado');
   const selectTipoEmpleado = document.getElementById('tipoEmpleadoSeleccionado');
 
+// 1) Correo válido
+  const correoVal = inputCorreo.value.trim();
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!correoVal || !emailRegex.test(correoVal)) {
+    await Swal.fire("Correo inválido", "Ingresa un correo en formato válido.", "warning");
+    return;
+  }
+
+  // 2) ID usuario numérico
+  const idVal = inputIdUsuario.value.trim();
+  if (!/^\d+$/.test(idVal)) {
+    await Swal.fire("ID inválido", "El ID de usuario debe ser un número.", "warning");
+    return;
+  }
+
+  // 3) Tipo de usuario
+  if (!selectTipoUsuario.value) {
+    await Swal.fire("Selecciona tipo", "Debes elegir un tipo de usuario.", "warning");
+    return;
+  }
+
+  // 4) Nombre no vacío
+  const nombreVal = inputNombre.value.trim();
+  if (!nombreVal) {
+    await Swal.fire("Falta nombre", "Ingresa el nombre del empleado.", "warning");
+    return;
+  }
+
+  // 5) Fecha de contratación
+  const fechaVal = inputFechaContratacion.value;
+  if (!fechaVal) {
+    await Swal.fire("Falta fecha", "Selecciona la fecha de contratación.", "warning");
+    return;
+  }
+
+  // 6) Puesto no vacío
+  const puestoVal = inputPuesto.value.trim();
+  if (!puestoVal) {
+    await Swal.fire("Falta puesto", "Ingresa el puesto del empleado.", "warning");
+    return;
+  }
+
+  // 7) Teléfono en formato 638-104-6882 ó 638 104 6882 ó 6381046882
+  const telVal = inputNumeroTelefono.value.trim();
+  const telRegex = /^[0-9]{3}[- ]?[0-9]{3}[- ]?[0-9]{4}$/;
+  if (!telRegex.test(telVal)) {
+    await Swal.fire("Teléfono inválido", "Ingrese un teléfono de 10 dígitos (ej. 123-456-7890).", "warning");
+    return;
+  }
+
+  // 8) Área y departamento
+  if (!selectArea.value) {
+    await Swal.fire("Falta área", "Selecciona un área.", "warning");
+    return;
+  }
+  if (!selectDepartamento.value) {
+    await Swal.fire("Falta departamento", "Selecciona un departamento.", "warning");
+    return;
+  }
+
+  // 9) Si es Docente, debe seleccionar tipo de docente
+  if (selectArea.value === 'Docentes' && !selectDocente.value) {
+    await Swal.fire("Falta tipo de docente", "Selecciona el tipo de docente.", "warning");
+    return;
+  }
+
+  // 10) Tipo de empleado
+  if (!selectTipoEmpleado.value) {
+    await Swal.fire("Falta tipo de empleado", "Selecciona el tipo de empleado.", "warning");
+    return;
+  }
+
   const empleadoData = {
     id_usuario: inputIdUsuario.value.trim(),
     nombre: inputNombre.value.trim(),
@@ -559,73 +631,122 @@ async function enviarSolicitud() {
   const fechaSolicitud   = new Date().toLocaleString("en-US", { timeZone: "America/Hermosillo" });
 
   // Valores del formulario
-  const motivoFalta      = document.getElementById('motivoFalta').value;
-  const fechaInicio      = document.getElementById('fechaInicio').value;
-  const fechaFin         = document.getElementById('fechaFin').value;
-  const tipoPermiso      = document.getElementById('tipoPermiso').value;
-  const horasFalta       = tipoPermiso === "Parcial"
-                            ? document.getElementById('horasFalta').value
-                            : null;
-  const autorizacion     = document.getElementById('autorizacion').value;
-  const nombreJefe       = document.getElementById('nombreJefe').value;
-  const puestoJefe       = document.getElementById('puestoJefe').value;
-  const jefeAutoriza     = document.getElementById('jefeAutoriza').value;
+   const motivoFalta        = document.getElementById('motivoFalta').value.trim();
+  const fechaInicio        = document.getElementById('fechaInicio').value;
+  const fechaFin           = document.getElementById('fechaFin').value;
+  const tipoPermiso        = document.getElementById('tipoPermiso').value;
+  const horasFalta         = tipoPermiso === "Parcial"
+                              ? document.getElementById('horasFalta').value.trim()
+                              : null;
+  const autorizacion       = document.getElementById('autorizacion').value;
+  const nombreJefe         = document.getElementById('nombreJefe').value;
+  const puestoJefe         = document.getElementById('puestoJefe').value;
+  const jefeAutoriza       = document.getElementById('jefeAutoriza').value;
   const puestoJefeAutoriza = document.getElementById('puestoJefeAutoriza').value;
 
-  // NUEVO: obtener y concatenar el horario en dos campos
-  const inicioEl = document.getElementById('horarioInicio');
-  const finEl    = document.getElementById('horarioFin');
-  if (!inicioEl || !finEl) {
-    console.error("Faltan los inputs 'horarioInicio' o 'horarioFin'");
-    await Swal.fire("Error interno", "No se encontraron los campos de horario", "error");
+  // Inputs de horario separados
+  const inicioEl   = document.getElementById('horarioInicio');
+  const finEl      = document.getElementById('horarioFin');
+  const horaInicio = inicioEl?.value;
+  const horaFin    = finEl?.value;
+  const horarioLaboral = `${horaInicio}-${horaFin}`;
+
+  // 1) Motivo de la falta
+  if (!motivoFalta) {
+    await Swal.fire("Falta motivo", "Por favor ingresa el motivo de la falta.", "warning");
     btnEnviar.disabled = false;
     return;
   }
-  const horaInicio     = inicioEl.value; // e.g. "07:00"
-  const horaFin        = finEl.value;    // e.g. "15:00"
-  const horarioLaboral = `${horaInicio}-${horaFin}`; // "07:00-15:00"
 
-  try {
-    await addDoc(collection(db, "solicitud"), {
-      id_permiso: idPermiso,
-      id_usuario,
-      nombre_empleado: nombre,
-      puesto_empleado: puesto,
-      motivo_falta: motivoFalta,
-      nombre_jefe_inmediato: nombreJefe,
-      puesto_jefe_inmediato: puestoJefe,
-      horario_laboral: horarioLaboral,
-      rango_fechas: { inicio: fechaInicio, fin: fechaFin },
-      autorizacion_goce_sueldo: autorizacion,
-      tipo_permiso: tipoPermiso,
-      horas_falta: horasFalta,
-      jefe_autoriza_permiso: jefeAutoriza,
-      puesto_jefe_autoriza: puestoJefeAutoriza,
-      archivos_adjuntos: await Promise.all(
-        archivosAdjuntos.map(async (file) => {
-          const base64 = await fileToBase64(file);
-          return {
-            nombre: file.name,
-            tipo: file.type,
-            contenido_base64: base64
-          };
-        })
-      ),
-      fecha_solicitud: new Date(new Date().toLocaleString("en-US", { timeZone: "America/Hermosillo" }))
-    });
-
-    await Swal.fire("Éxito", `Solicitud enviada exitosamente con ID: ${idPermiso}`, "success");
-
-    form.reset();
-    archivosAdjuntos = [];
-    document.getElementById('horasFalta').disabled = true;
-    closeModalSolicitud();
-
-  } catch (error) {
-    console.error("Error al enviar la solicitud:", error);
-    await Swal.fire("Error", "Hubo un error al enviar la solicitud.", "error");
-  } finally {
+  // 2) Fechas
+  if (!fechaInicio) {
+    await Swal.fire("Falta fecha", "Selecciona la fecha de inicio.", "warning");
     btnEnviar.disabled = false;
+    return;
+  }
+  if (!fechaFin) {
+    await Swal.fire("Falta fecha", "Selecciona la fecha de fin.", "warning");
+    btnEnviar.disabled = false;
+    return;
+  }
+  if (new Date(fechaInicio) > new Date(fechaFin)) {
+    await Swal.fire("Fechas inválidas", "La fecha de inicio no puede ser posterior a la de fin.", "warning");
+    btnEnviar.disabled = false;
+    return;
+  }
+
+  // 3) Horario laboral (inicio y fin)
+  const horaRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
+  if (!horaInicio || !horaRegex.test(horaInicio)) {
+    await Swal.fire("Horario inválido", "Ingresa un horario de inicio en formato HH:mm.", "warning");
+    btnEnviar.disabled = false;
+    return;
+  }
+  if (!horaFin || !horaRegex.test(horaFin)) {
+    await Swal.fire("Horario inválido", "Ingresa un horario de fin en formato HH:mm.", "warning");
+    btnEnviar.disabled = false;
+    return;
+  }
+
+  // 4) Tipo de permiso y horas de falta
+  if (!tipoPermiso) {
+    await Swal.fire("Falta tipo", "Selecciona un tipo de permiso.", "warning");
+    btnEnviar.disabled = false;
+    return;
+  }
+  if (tipoPermiso === "Parcial") {
+    const horasRegex = /^([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d$/;
+    if (!horasFalta || !horasRegex.test(horasFalta)) {
+      await Swal.fire("Formato inválido", "Horas de falta deben ser HH:mm-HH:mm.", "warning");
+      btnEnviar.disabled = false;
+      return;
+    }
+  }
+
+  // 5) Tipo de autorización
+  if (!autorizacion) {
+    await Swal.fire("Falta autorización", "Selecciona tipo de autorización.", "warning");
+    btnEnviar.disabled = false;
+    return;
+  }
+
+  // 6) Jefes y puestos
+  if (!nombreJefe) {
+    await Swal.fire("Falta jefe", "Selecciona el nombre del jefe inmediato.", "warning");
+    btnEnviar.disabled = false;
+    return;
+  }
+  if (!puestoJefe) {
+    await Swal.fire("Falta puesto", "Selecciona el puesto del jefe inmediato.", "warning");
+    btnEnviar.disabled = false;
+    return;
+  }
+  if (!jefeAutoriza) {
+    await Swal.fire("Falta quien autoriza", "Selecciona el jefe que autoriza el permiso.", "warning");
+    btnEnviar.disabled = false;
+    return;
+  }
+  if (!puestoJefeAutoriza) {
+    await Swal.fire("Falta puesto", "Selecciona el puesto del jefe que autoriza.", "warning");
+    btnEnviar.disabled = false;
+    return;
+  }
+
+  // 7a) Debe haber al menos un archivo adjunto
+  if (archivosAdjuntos.length === 0) {
+    await Swal.fire("Falta adjuntar", "Debes agregar al menos un archivo PDF o JPG.", "warning");
+    btnEnviar.disabled = false;
+    return;
+  }
+
+  // 7) Archivos adjuntos (solo PDF/JPG)
+  for (const file of archivosAdjuntos) {
+    const ext = file.name.split('.').pop().toLowerCase();
+    if (!['pdf','jpg','jpeg'].includes(ext)) {
+      await Swal.fire("Archivo inválido", "Solo se permiten PDF o JPG.", "warning");
+      btnEnviar.disabled = false;
+      return;
+    }
   }
 }
 
@@ -672,20 +793,26 @@ function mostrarListaArchivos() {
   lista.innerHTML = '';
   archivosAdjuntos.forEach((archivo, index) => {
     const li = document.createElement('li');
-    li.innerHTML = `
-      ${archivo.name}
-      <button onclick="eliminarArchivo(${index})">Eliminar</button>
-    `;
+    // Nombre del archivo
+    const texto = document.createTextNode(archivo.name + ' ');
+    // Botón de eliminar sin disparar submit
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = 'Eliminar';
+    btn.addEventListener('click', () => eliminarArchivo(index));
+    // Montaje
+    li.appendChild(texto);
+    li.appendChild(btn);
     lista.appendChild(li);
   });
 }
 
 function eliminarArchivo(index) {
-  const archivoEliminado = archivosAdjuntos[index];
-  archivosAdjuntos.splice(index, 1);
-  mostrarListaArchivos();
+  const archivoEliminado = archivosAdjuntos.splice(index, 1)[0];  // elimina y obtiene el archivo
+  mostrarListaArchivos();                                        // re-renderiza la lista
   Swal.fire("Archivo eliminado", `${archivoEliminado.name} ha sido removido.`, "info");
 }
+
 
 const auth = getAuth();
 
