@@ -1,6 +1,8 @@
 // IMPORTACIONES DE FIREBASE Y MÉTODOS DE FIRESTORE
 import { db } from '../BD/firebaseConfig.js';
 import { collection, doc, getDoc, getDocs, query, where, updateDoc, addDoc, deleteDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+import { getAuth, signOut } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
+
 
 // SweetAlert2
 import Swal from 'https://cdn.jsdelivr.net/npm/sweetalert2@11/+esm';
@@ -189,26 +191,48 @@ async function deleteEmployee(id_usuario) {
 window.deleteEmployee = deleteEmployee;
 
 async function buscarUsuario(queryText) {
+  function removeDiacritics(str) {
+  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
   if (!queryText) {
     renderEmployees(allEmployees);
     return;
   }
+
+  const lowerQuery = removeDiacritics(queryText.toLowerCase());
+
   const empleadosRef = collection(db, "empleados");
-  const idSnapshot = await getDocs(query(empleadosRef, where('id_usuario', '>=', queryText), where('id_usuario', '<=', queryText + '\uf8ff')));
-  const nombreSnapshot = await getDocs(query(empleadosRef, where('nombre', '>=', queryText), where('nombre', '<=', queryText + '\uf8ff')));
 
-  const usuariosPorId = idSnapshot.docs.map(doc => doc.data());
-  const usuariosPorNombre = nombreSnapshot.docs.map(doc => doc.data());
+  // Búsqueda por ID (coincidencias que comiencen con el texto)
+  const idSnapshot = await getDocs(
+    query(empleadosRef, where("id_usuario", ">=", queryText), where("id_usuario", "<=", queryText + "\uf8ff"))
+  );
 
+  // Búsqueda por nombre (ignora acentos y mayúsculas)
+  const allSnapshot = await getDocs(empleadosRef);
+  const empleadosNombre = allSnapshot.docs
+    .map((doc) => ({ ...doc.data(), id: doc.id }))
+    .filter((emp) => {
+      if (!emp.nombre) return false;
+      const nombreNormalizado = removeDiacritics(emp.nombre.toLowerCase());
+      return nombreNormalizado.includes(lowerQuery);
+    });
+
+  const empleadosPorId = idSnapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id }));
+
+  // Unir y eliminar duplicados por id_usuario
   const mapUnicos = new Map();
-  [...usuariosPorId, ...usuariosPorNombre].forEach(usuario => {
-    mapUnicos.set(usuario.id_usuario, usuario);
+  [...empleadosPorId, ...empleadosNombre].forEach((emp) => {
+    mapUnicos.set(emp.id_usuario, emp);
   });
 
-  let resultadosUnicos = Array.from(mapUnicos.values());
-  resultadosUnicos.sort((a, b) => a.nombre.localeCompare(b.nombre));
-  renderEmployees(resultadosUnicos);
+  const resultados = Array.from(mapUnicos.values());
+  resultados.sort((a, b) => a.nombre.localeCompare(b.nombre));
+
+  renderEmployees(resultados);
 }
+
 
 function handleSearch() {
   const searchInput = document.getElementById('searchInput');
@@ -663,5 +687,18 @@ function eliminarArchivo(index) {
   Swal.fire("Archivo eliminado", `${archivoEliminado.name} ha sido removido.`, "info");
 }
 
+const auth = getAuth();
+
+document.getElementById('btnCerrarSesion').addEventListener('click', async (e) => {
+  e.preventDefault();
+  try {
+    await signOut(auth);
+    await Swal.fire("Sesión cerrada", "Has cerrado sesión correctamente", "success");
+    window.location.href = "Login.html";
+  } catch (error) {
+    console.error("Error al cerrar sesión:", error);
+    await Swal.fire("Error", "No se pudo cerrar la sesión. Intenta de nuevo.", "error");
+  }
+});
 
 

@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
   <!-- Solo se importa principalAdmin.js, ya que toda la lógica está allí -->
   <script type="module" src="../JS/principalAdmin.js"></script>
@@ -56,14 +56,6 @@
               </li>
             </ul>
           </li>
-          <li class="nav-item">
-            <a href="Contacto.html" class="nav-link">
-              <span class="material-symbols-rounded">contacts</span>
-              <span class="nav-label">Contacto</span>
-            </a>
-            <ul class="dropdown-menu">
-              <li class="nav-item"><a class="nav-link dropdown-title">Contacto</a></li>
-            </ul>
           </li>
           <li class="nav-item">
             <a href="preguntasFrecuentes.html" class="nav-link">
@@ -95,10 +87,11 @@
             </ul>
           </li>
           <li class="nav-item">
-            <a href="#" class="nav-link">
+            <a href="#" class="nav-link" id="btnCerrarSesion">
               <span class="material-symbols-rounded">logout</span>
               <span class="nav-label">Sign Out</span>
             </a>
+
             <ul class="dropdown-menu">
               <li class="nav-item"><a class="nav-link dropdown-title">Sign Out</a></li>
             </ul>
@@ -163,13 +156,13 @@
             <input type="text" id="motivoFalta">
           </div>
           <div style="flex:1; display:flex; flex-direction:column;">
-    <label>Inicio de jornada</label>
-    <input type="time" id="horarioInicio" required>
-  </div>
-  <div style="flex:1; display:flex; flex-direction:column;">
-    <label>Fin de jornada</label>
-    <input type="time" id="horarioFin" required>
-  </div>
+            <label>Inicio de jornada</label>
+            <input type="time" id="horarioInicio" required>
+          </div>
+          <div style="flex:1; display:flex; flex-direction:column;">
+            <label>Fin de jornada</label>
+            <input type="time" id="horarioFin" required>
+          </div>
         </div>
         <!-- Tipo de permiso y horas -->
         <div class="form-group">
