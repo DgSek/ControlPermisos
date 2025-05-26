@@ -339,7 +339,7 @@ async function guardarEmpleado() {
       await addDoc(collection(db, "empleados"), empleadoData);
       await Swal.fire("Agregado", "Empleado agregado correctamente", "success");
     }
-    window.location.href = '/PrincipalAdmin.html';
+    window.location.href = './principalAdmin.html';
   } catch (error) {
     console.error("Error al guardar el empleado:", error);
     await Swal.fire("Error", "Hubo un error al guardar el empleado.", "error");
