@@ -38,74 +38,74 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector(".sidebar").classList.add("collapsed");
   }
 
- // -----------------------------
-// Estado global
-// -----------------------------
-let solicitudes = [];
-let todasLasSolicitudes = [];
-let tituloReporte = 'Seleccione "General" para ver el reporte de permisos.';
-let empleados = [];
-let empleadoSeleccionado = "";
-let fechaInicio = "";
-let fechaFin = "";
+  // -----------------------------
+  // Estado global
+  // -----------------------------
+  let solicitudes = [];
+  let todasLasSolicitudes = [];
+  let tituloReporte = 'Seleccione "General" para ver el reporte de permisos.';
+  let empleados = [];
+  let empleadoSeleccionado = "";
+  let fechaInicio = "";
+  let fechaFin = "";
 
-// Estos dos se llenarán dinámicamente desde Firestore
-let areaCodes = {};
-let departmentCodes = {};
+  // Estos dos se llenarán dinámicamente desde Firestore
+  let areaCodes = {};
+  let departmentCodes = {};
 
-const primaryMenuEl = document.getElementById('primary-menu');
-const reporteContenidoEl = document.getElementById('reporte-contenido');
+  const primaryMenuEl = document.getElementById('primary-menu');
+  const reporteContenidoEl = document.getElementById('reporte-contenido');
 
-// -----------------------------
-// Cargar estructura desde Firestore
-// -----------------------------
-async function cargarEstructuraAreasYDepartamentos() {
-  try {
-    const docRef = doc(db, 'areas', 'doc');
-    const docSnap = await getDoc(docRef);
+  // -----------------------------
+  // Cargar estructura desde Firestore
+  // -----------------------------
+  async function cargarEstructuraAreasYDepartamentos() {
+    try {
+      const docRef = doc(db, 'areas', 'doc');
+      const docSnap = await getDoc(docRef);
 
-    if (docSnap.exists()) {
-      const data = docSnap.data();
+      if (docSnap.exists()) {
+        const data = docSnap.data();
 
-      // Define el orden deseado manualmente
-      const ordenCorrecto = [
-        'Dirección General',
-        'Subdirección de planeación y vinculación',
-        'Subdirección de servicios administrativos',
-        'Subdirección académica',
-        'Docentes'
-      ];
+        // Define el orden deseado manualmente
+        const ordenCorrecto = [
+          'Dirección General',
+          'Subdirección de planeación y vinculación',
+          'Subdirección de servicios administrativos',
+          'Subdirección académica',
+          'Docentes'
+        ];
 
-      areaCodes = {};
-      departmentCodes = {};
+        areaCodes = {};
+        departmentCodes = {};
 
-      for (const nombreArea of ordenCorrecto) {
-        if (data[nombreArea]) {
-          areaCodes[nombreArea] = data[nombreArea];
-          departmentCodes[nombreArea] = {};
-        }
-      }
-
-      const deptSnap = await getDocs(collection(db, 'departamentos'));
-      deptSnap.forEach(doc => {
-        const codigoArea = doc.id;
-        const dataDeptos = doc.data();
-        const nombreArea = Object.keys(areaCodes).find(k => areaCodes[k] === codigoArea);
-        if (nombreArea) {
-          for (const [nombreDepto, codigoDepto] of Object.entries(dataDeptos)) {
-            departmentCodes[nombreArea][nombreDepto] = codigoDepto;
+        for (const nombreArea of ordenCorrecto) {
+          if (data[nombreArea]) {
+            areaCodes[nombreArea] = data[nombreArea];
+            departmentCodes[nombreArea] = {};
           }
         }
-      });
-    }
-  } catch (error) {
-    console.error("Error cargando áreas y departamentos desde Firestore:", error);
-  }
-}
 
-// -----------------------------
-// Fetch de datos
-// -----------------------------
+        const deptSnap = await getDocs(collection(db, 'departamentos'));
+        deptSnap.forEach(doc => {
+          const codigoArea = doc.id;
+          const dataDeptos = doc.data();
+          const nombreArea = Object.keys(areaCodes).find(k => areaCodes[k] === codigoArea);
+          if (nombreArea) {
+            for (const [nombreDepto, codigoDepto] of Object.entries(dataDeptos)) {
+              departmentCodes[nombreArea][nombreDepto] = codigoDepto;
+            }
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Error cargando áreas y departamentos desde Firestore:", error);
+    }
+  }
+
+  // -----------------------------
+  // Fetch de datos
+  // -----------------------------
 
   function extractEmployeeNumbers(list) {
     return list.map(s => s.id_permiso.split('-')[1]);
@@ -211,26 +211,26 @@ async function cargarEstructuraAreasYDepartamentos() {
   // ================================
   //   Render del menú lateral
   // ================================
- // Íconos asociados a las áreas (definido globalmente o justo antes de renderPrimaryMenu)
-const areaIcons = {
-  'dirección general': 'account_balance',
-  'subdirección de planeación y vinculación': 'insights',
-  'subdirección de servicios administrativos': 'build',
-  'subdirección académica': 'school',
-  'docentes': 'groups'
-};
+  // Íconos asociados a las áreas (definido globalmente o justo antes de renderPrimaryMenu)
+  const areaIcons = {
+    'dirección general': 'account_balance',
+    'subdirección de planeación y vinculación': 'insights',
+    'subdirección de servicios administrativos': 'build',
+    'subdirección académica': 'school',
+    'docentes': 'groups'
+  };
 
-// ================================
-//   Render del menú lateral
-// ================================
-function renderPrimaryMenu() {
-  let html = '';
+  // ================================
+  //   Render del menú lateral
+  // ================================
+  function renderPrimaryMenu() {
+    let html = '';
 
-  for (const area in areaCodes) {
-    const areaKey = area.trim().toLowerCase(); // Normalizar
-    const icon = areaIcons[areaKey] || 'folder'; // Fallback si no existe
+    for (const area in areaCodes) {
+      const areaKey = area.trim().toLowerCase(); // Normalizar
+      const icon = areaIcons[areaKey] || 'folder'; // Fallback si no existe
 
-    html += `
+      html += `
       <li class="nav-item dropdown-container">
         <a href="#" class="nav-link dropdown-toggle">
           <span class="material-symbols-rounded">${icon}</span>
@@ -244,25 +244,25 @@ function renderPrimaryMenu() {
             </a>
           </li>`;
 
-    if (departmentCodes[area]) {
-      for (const dept in departmentCodes[area]) {
-        html += `
+      if (departmentCodes[area]) {
+        for (const dept in departmentCodes[area]) {
+          html += `
           <li class="nav-item">
             <a href="javascript:void(0)" class="nav-link dropdown-link" onclick="handleDepartmentClick('${area}','${dept}')">
               ${dept}
             </a>
           </li>`;
+        }
       }
-    }
 
-    html += `
+      html += `
         </ul>
       </li>`;
-  }
+    }
 
-  primaryMenuEl.innerHTML = html;
-  bindDropdownToggles();
-}
+    primaryMenuEl.innerHTML = html;
+    bindDropdownToggles();
+  }
   // ================================
   //   Render de tarjetas + gráficas
   // ================================
@@ -270,42 +270,41 @@ function renderPrimaryMenu() {
     let html = `<h3>${tituloReporte}</h3>`;
 
     html += `
-      <div class="combobox-container">
-        <label for="empleados-select">Seleccione un empleado:</label>
-        <select id="empleados-select" onchange="handleEmployeeSelection(event)">
-          <option value="">-- Todos --</option>`;
+    <div class="combobox-container">
+      <label for="empleados-select">Seleccione un empleado:</label>
+      <select id="empleados-select">
+        <option value="">-- Todos --</option>`;
     empleados.forEach(e => {
       html += `<option value="${e.id_usuario}" ${empleadoSeleccionado === e.id_usuario ? 'selected' : ''}>${e.nombre}</option>`;
     });
     html += `
-        </select>
-      </div>
-      <div class="filtros-container">
-        <label>Fecha Inicio:</label>
-        <input type="date" id="fechaInicio" value="${fechaInicio}">
-        <label>Fecha Fin:</label>
-        <input type="date" id="fechaFin" value="${fechaFin}">
-        <button onclick="handleFiltrarPorFecha()" class="filtrar-button">Filtrar</button>
-      </div>`;
+      </select>
+    </div>
+    <div class="filtros-container">
+      <label>Fecha Inicio:</label>
+      <input type="date" id="fechaInicio" value="${fechaInicio}">
+      <label>Fecha Fin:</label>
+      <input type="date" id="fechaFin" value="${fechaFin}">
+      <button onclick="handleFiltrarPorFecha()" class="filtrar-button">Filtrar</button>
+    </div>`;
 
     if (solicitudes.length) {
       html += `<ul class="solicitudes-lista">`;
       solicitudes.forEach(s => {
         html += `
-  <li class="solicitud-item">
-    <p><strong>Nombre:</strong> ${s.nombre_empleado}</p>
-    <p><strong>Motivo:</strong> ${s.motivo_falta}</p>
-    <p><strong>Fecha:</strong> ${s.fecha_solicitud}</p>
-    <p><strong>Tipo:</strong> ${s.tipo_permiso}</p>
-    <p><strong>Horario:</strong> ${s.horario_laboral}</p>
-    <p><strong>Jefe:</strong> ${s.jefe_autoriza_permiso}</p>
-    <p><strong>Puesto:</strong> ${s.puesto_empleado}</p>
-    ${Array.isArray(s.archivos_adjuntos) && s.archivos_adjuntos.length > 0
+<li class="solicitud-item">
+  <p><strong>Nombre:</strong> ${s.nombre_empleado}</p>
+  <p><strong>Motivo:</strong> ${s.motivo_falta}</p>
+  <p><strong>Fecha:</strong> ${s.fecha_solicitud}</p>
+  <p><strong>Tipo:</strong> ${s.tipo_permiso}</p>
+  <p><strong>Horario:</strong> ${s.horario_laboral}</p>
+  <p><strong>Jefe:</strong> ${s.jefe_autoriza_permiso}</p>
+  <p><strong>Puesto:</strong> ${s.puesto_empleado}</p>
+  ${Array.isArray(s.archivos_adjuntos) && s.archivos_adjuntos.length > 0
             ? `<button onclick='verArchivosAdjuntos(${JSON.stringify(s.archivos_adjuntos)})'>Ver archivo${s.archivos_adjuntos.length > 1 ? 's' : ''}</button>`
             : ''
           }
-  </li>`;
-
+</li>`;
       });
       html += `</ul>`;
     } else {
@@ -315,26 +314,28 @@ function renderPrimaryMenu() {
     html += `<button onclick="exportToExcel()" class="export-button">Exportar a Excel</button>`;
 
     html += `
-      <div class="charts-bar-section">
-        <div>
-          <h4>Solicitudes por Área</h4>
-          <canvas id="chartArea"></canvas>
-        </div>
-        <div>
-          <h4>Permisos por Departamento</h4>
-          <canvas id="chartDepartment"></canvas>
-        </div>
-        <div>
-          <h4>Permisos Mensuales (Empleado)</h4>
-          <label for="chartEmpleadoSelect">Empleado:</label>
-          <select id="chartEmpleadoSelect"><option value="">-- Seleccione --</option></select>
-          <canvas id="chartIndividual"></canvas>
-        </div>
-      </div>`;
+    <div class="charts-bar-section">
+      <div>
+        <h4>Solicitudes por Área</h4>
+        <canvas id="chartArea"></canvas>
+      </div>
+      <div>
+        <h4>Permisos por Departamento</h4>
+        <canvas id="chartDepartment"></canvas>
+      </div>
+      <div>
+        <h4>Permisos Mensuales (Empleado)</h4>
+        <label for="chartEmpleadoSelect">Empleado:</label>
+        <select id="chartEmpleadoSelect"><option value="">-- Seleccione --</option></select>
+        <canvas id="chartIndividual"></canvas>
+      </div>
+    </div>`;
 
     reporteContenidoEl.innerHTML = html;
+
     initCharts();
   }
+
 
   // ================================
   //  Lógica real para poblar charts
@@ -389,49 +390,63 @@ function renderPrimaryMenu() {
   }
 
   function initCharts() {
-    // 1) Áreas
+    // 1) Gráfico de áreas
     const areaStats = generateAreaReport(todasLasSolicitudes);
     if (pieAreaChart) pieAreaChart.destroy();
     pieAreaChart = new Chart(
       document.getElementById('chartArea'), {
       type: 'pie',
       data: {
-        labels: areaStats.labels, datasets: [{
-          data: areaStats.values,
-          backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF']
-        }]
+        labels: areaStats.labels,
+        datasets: [{ data: areaStats.values, backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF'] }]
       },
-      options: { responsive: true, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Solicitudes por Área' } } }
-    });
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'top' },
+          title: { display: true, text: 'Solicitudes por Área' }
+        }
+      }
+    }
+    );
 
-    // 2) Departamentos
+    // 2) Gráfico de departamentos
     const deptStats = generateDepartmentReport(todasLasSolicitudes);
     if (pieDeptChart) pieDeptChart.destroy();
     pieDeptChart = new Chart(
       document.getElementById('chartDepartment'), {
       type: 'pie',
       data: {
-        labels: deptStats.labels, datasets: [{
+        labels: deptStats.labels,
+        datasets: [{
           data: deptStats.values,
-          backgroundColor: [
-            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
-            '#FF9F40', '#4D5360', '#C9CBCF', '#8A89A6', '#A1DE93'
-          ]
+          backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF',
+            '#FF9F40', '#4D5360', '#C9CBCF', '#8A89A6', '#A1DE93']
         }]
       },
-      options: { responsive: true, plugins: { legend: { position: 'top' }, title: { display: true, text: 'Permisos por Departamento' } } }
-    });
+      options: {
+        responsive: true,
+        plugins: {
+          legend: { position: 'top' },
+          title: { display: true, text: 'Permisos por Departamento' }
+        }
+      }
+    }
+    );
 
-    // 3) Mensual - Empleado
+    // 3) Gráfico de permisos mensuales por empleado
     const empty = generateMonthlyReport([]);
     if (barEmpChart) barEmpChart.destroy();
     barEmpChart = new Chart(
       document.getElementById('chartIndividual'), {
       type: 'bar',
-      data: { labels: empty.labels, datasets: [{ label: 'Permisos', data: empty.values, backgroundColor: '#FFCE56' }] },
+      data: {
+        labels: empty.labels,
+        datasets: [{ label: 'Permisos', data: empty.values, backgroundColor: '#FFCE56' }]
+      },
       options: {
         responsive: true,
-        aspectRatio: 1,     // 1:1 → gráfica cuadrada
+        aspectRatio: 1,
         plugins: {
           legend: { position: 'top' },
           title: { display: true, text: 'Permisos Mensuales (Empleado)' }
@@ -441,27 +456,41 @@ function renderPrimaryMenu() {
           y: { beginAtZero: true, title: { display: true, text: 'Cantidad' } }
         }
       }
+    }
+    );
 
-    });
-
-    // Sincronizar top-select y chart-select
+    // Manejo de selects
     const topSel = document.getElementById('empleados-select');
     const chartSel = document.getElementById('chartEmpleadoSelect');
-    function onEmpChange(e) {
-      const id = e.target.value;
-      topSel.value = id;
-      chartSel.value = id;
-      updateMonthlyChart(id);
-    }
-    topSel.addEventListener('change', onEmpChange);
 
-    // Poblamos chart-select
+    // Actualiza gráficos y solicitudes
+    function onEmpChange(e) {
+  const id = e.target.value;
+  topSel.value = id;
+  chartSel.value = id;
+  empleadoSeleccionado = id;
+  solicitudes = id
+    ? todasLasSolicitudes.filter(s => s.id_permiso.endsWith(`-${id}`))
+    : todasLasSolicitudes;
+  updateMonthlyChart(id);
+  renderTablaPermisos(); // ✅ Solo actualiza la tabla de solicitudes
+}
+
+
+    topSel.addEventListener('change', onEmpChange);
+    chartSel.addEventListener('change', onEmpChange);
+
+    // Poblar opciones del segundo select
     chartSel.innerHTML = '<option value="">-- Seleccione --</option>';
     empleados.forEach(emp => {
       chartSel.innerHTML += `<option value="${emp.id_usuario}">${emp.nombre}</option>`;
     });
-    chartSel.addEventListener('change', onEmpChange);
+
+    // Marcar la selección actual si existe
+    topSel.value = empleadoSeleccionado;
+    chartSel.value = empleadoSeleccionado;
   }
+
 
   // -----------------------------
   // Exponer handlers
@@ -518,18 +547,48 @@ function renderPrimaryMenu() {
     });
   });
 
-window.verArchivosAdjuntos = function (archivos) {
-  archivos.forEach((archivo, index) => {
-    const win = window.open();
-    if (win) {
-      win.document.title = archivo.nombre || `Archivo ${index + 1}`;
-      win.document.body.innerHTML = `
+  window.verArchivosAdjuntos = function (archivos) {
+    archivos.forEach((archivo, index) => {
+      const win = window.open();
+      if (win) {
+        win.document.title = archivo.nombre || `Archivo ${index + 1}`;
+        win.document.body.innerHTML = `
         <h2>${archivo.nombre}</h2>
         ${archivo.tipo.includes("pdf")
-          ? `<embed src="${archivo.contenido_base64}" type="application/pdf" width="100%" height="90%"/>`
-          : `<img src="${archivo.contenido_base64}" style="max-width:100%; max-height:90vh;" />`
-        }
+            ? `<embed src="${archivo.contenido_base64}" type="application/pdf" width="100%" height="90%"/>`
+            : `<img src="${archivo.contenido_base64}" style="max-width:100%; max-height:90vh;" />`
+          }
       `;
-    }
+      }
+    });
+  }
+});
+function renderTablaPermisos() {
+  const listaEl = document.querySelector('.solicitudes-lista');
+  if (!listaEl) return;
+
+  if (!solicitudes.length) {
+    listaEl.outerHTML = `<p class="mensaje-no-solicitudes">No hay solicitudes en el rango seleccionado.</p>`;
+    return;
+  }
+
+  let html = '';
+  solicitudes.forEach(s => {
+    html += `
+      <li class="solicitud-item">
+        <p><strong>Nombre:</strong> ${s.nombre_empleado}</p>
+        <p><strong>Motivo:</strong> ${s.motivo_falta}</p>
+        <p><strong>Fecha:</strong> ${s.fecha_solicitud}</p>
+        <p><strong>Tipo:</strong> ${s.tipo_permiso}</p>
+        <p><strong>Horario:</strong> ${s.horario_laboral}</p>
+        <p><strong>Jefe:</strong> ${s.jefe_autoriza_permiso}</p>
+        <p><strong>Puesto:</strong> ${s.puesto_empleado}</p>
+        ${Array.isArray(s.archivos_adjuntos) && s.archivos_adjuntos.length > 0
+          ? `<button onclick='verArchivosAdjuntos(${JSON.stringify(s.archivos_adjuntos)})'>Ver archivo${s.archivos_adjuntos.length > 1 ? 's' : ''}</button>`
+          : ''
+        }
+      </li>`;
   });
-}});
+
+  listaEl.innerHTML = html;
+}
