@@ -2,6 +2,17 @@ import { db } from '../BD/firebaseConfig.js';
 import { collection, query, where, getDocs, doc, getDoc } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 import * as XLSX from 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
 
+// Variables globales
+let solicitudes = [];
+let todasLasSolicitudes = [];
+let tituloReporte = 'Seleccione "General" para ver el reporte de permisos.';
+let empleados = [];
+let empleadoSeleccionado = "";
+let fechaInicio = "";
+let fechaFin = "";
+let areaCodes = {};
+let departmentCodes = {};
+
 document.addEventListener('DOMContentLoaded', () => {
   // -----------------------------
   // Sidebar
@@ -41,17 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // -----------------------------
   // Estado global
   // -----------------------------
-  let solicitudes = [];
-  let todasLasSolicitudes = [];
-  let tituloReporte = 'Seleccione "General" para ver el reporte de permisos.';
-  let empleados = [];
-  let empleadoSeleccionado = "";
-  let fechaInicio = "";
-  let fechaFin = "";
-
-  // Estos dos se llenarán dinámicamente desde Firestore
-  let areaCodes = {};
-  let departmentCodes = {};
 
   const primaryMenuEl = document.getElementById('primary-menu');
   const reporteContenidoEl = document.getElementById('reporte-contenido');
@@ -121,34 +121,42 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error("Error obteniendo empleados:", e);
     }
   }
-  async function fetchSolicitudes(areaCode, departmentCode = null) {
-    try {
-      const ref = collection(db, 'solicitud');
-      const q = departmentCode
-        ? query(ref,
-          where('id_permiso', '>=', `${areaCode}${departmentCode}`),
-          where('id_permiso', '<', `${areaCode}${departmentCode}z`)
-        )
-        : query(ref,
-          where('id_permiso', '>=', `${areaCode}`),
-          where('id_permiso', '<', `${areaCode}z`)
-        );
-      const snap = await getDocs(q);
-      const data = snap.docs.map(doc => {
-        const d = doc.data();
-        if (d.fecha_solicitud?.seconds) {
-          d.fecha_solicitud = new Date(d.fecha_solicitud.seconds * 1000)
-            .toISOString().slice(0, 10);
-        }
-        return d;
-      });
-      solicitudes = data;
-      todasLasSolicitudes = data;
-      return data;
-    } catch (e) {
-      console.error("Error obteniendo solicitudes:", e);
-    }
+async function fetchSolicitudes(areaCode, departmentCode = null) {
+  try {
+    const ref = collection(db, 'solicitud');
+    const q = departmentCode
+      ? query(ref,
+        where('id_permiso', '>=', `${areaCode}${departmentCode}`),
+        where('id_permiso', '<', `${areaCode}${departmentCode}z`)
+      )
+      : query(ref,
+        where('id_permiso', '>=', `${areaCode}`),
+        where('id_permiso', '<', `${areaCode}z`)
+      );
+
+    const snap = await getDocs(q);
+    const data = snap.docs.map(doc => {
+      const d = doc.data();
+      // Convertir fecha a YYYY-MM-DD
+      const fecha = new Date(d.fecha_solicitud);
+      if (!isNaN(fecha.getTime())) {
+        d.fecha_solicitud = fecha.toISOString().slice(0, 10);
+      } else {
+        d.fecha_solicitud = "0000-00-00";
+      }
+      // Extraer ID de usuario
+      d.id_usuario = d.id_usuario || (d.id_permiso?.split('-')[1]) || '';
+      return d;
+    });
+
+    solicitudes = data;
+    todasLasSolicitudes = data;
+    return data;
+  } catch (e) {
+    console.error("Error obteniendo solicitudes:", e);
   }
+}
+
 
   // -----------------------------
   // Handlers de menú
@@ -465,16 +473,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Actualiza gráficos y solicitudes
     function onEmpChange(e) {
-  const id = e.target.value;
-  topSel.value = id;
-  chartSel.value = id;
-  empleadoSeleccionado = id;
-  solicitudes = id
-    ? todasLasSolicitudes.filter(s => s.id_permiso.endsWith(`-${id}`))
-    : todasLasSolicitudes;
-  updateMonthlyChart(id);
-  renderTablaPermisos(); // ✅ Solo actualiza la tabla de solicitudes
-}
+      const id = e.target.value;
+      topSel.value = id;
+      chartSel.value = id;
+      empleadoSeleccionado = id;
+      solicitudes = id
+        ? todasLasSolicitudes.filter(s => s.id_permiso.endsWith(`-${id}`))
+        : todasLasSolicitudes;
+      updateMonthlyChart(id);
+      renderTablaPermisos(); // ✅ Solo actualiza la tabla de solicitudes
+    }
 
 
     topSel.addEventListener('change', onEmpChange);
@@ -584,9 +592,9 @@ function renderTablaPermisos() {
         <p><strong>Jefe:</strong> ${s.jefe_autoriza_permiso}</p>
         <p><strong>Puesto:</strong> ${s.puesto_empleado}</p>
         ${Array.isArray(s.archivos_adjuntos) && s.archivos_adjuntos.length > 0
-          ? `<button onclick='verArchivosAdjuntos(${JSON.stringify(s.archivos_adjuntos)})'>Ver archivo${s.archivos_adjuntos.length > 1 ? 's' : ''}</button>`
-          : ''
-        }
+        ? `<button onclick='verArchivosAdjuntos(${JSON.stringify(s.archivos_adjuntos)})'>Ver archivo${s.archivos_adjuntos.length > 1 ? 's' : ''}</button>`
+        : ''
+      }
       </li>`;
   });
 
