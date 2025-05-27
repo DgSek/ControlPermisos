@@ -1,66 +1,46 @@
 // Importar configuración y métodos de Firebase Firestore
 import { db } from '../BD/firebaseConfig.js';
-import { collection, doc, getDocs, query, where, updateDoc, addDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+import { collection, doc, getDocs, getDoc, query, where, updateDoc, addDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 import Swal from 'https://cdn.jsdelivr.net/npm/sweetalert2@11/+esm';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const container = document.getElementById('agregar-empleado-container');
 
-  // Constantes para áreas y departamentos
-  const areaCodes = {
-    'Dirección General': 'A1',
-    'Subdirección de planeación y vinculación': 'A2',
-    'Subdirección de servicios administrativos': 'A3',
-    'Subdirección académica': 'A4',
-    'Docentes': 'A5'
-  };
-
-  const departmentCodes = {
-    'Dirección General': {
-      'Dirección General': '01',
-      'Innovación y calidad': '02',
-    },
-    'Subdirección de planeación y vinculación': {
-      'Subdirección de planeación y vinculación': '01',
-      'Departamento de servicios escolares': '02',
-      'Departamento de vinculación y extensión': '04',
-      'Biblioteca': '05',
-      'Médico General': '06',
-    },
-    'Subdirección de servicios administrativos': {
-      'Subdirección de servicios administrativos': '01',
-      'Departamento de recursos financieros': '02',
-      'Departamento de recursos humanos': '03',
-      'Departamento del centro de cómputo': '04',
-      'Laboratorio': '05',
-      'Departamento de recursos materiales y servicios generales': '06',
-      'Archivos generales': '07',
-      'Mantenimiento e intendencia': '08',
-      'Vigilante': '09',
-    },
-    'Subdirección académica': {
-      'Subdirección académica': '01',
-      'Jefes de división': '02',
-      'Departamento de psicología': '03',
-      'Trabajo social': '04',
-      'Laboratorios': '05',
-    },
-    'Docentes': {
-      'Ingeniería Industrial': '01',
-      'Lic. Administración': '02',
-      'Ing. Sistemas computacionales': '03',
-      'Ing. Civil': '04',
-      'Extraescolares': '05',
-      'Coordinación de lenguas': '06',
-    },
-  };
-
-  // Variables de estado
+  let areaMap = {}; // { 'A1': 'Dirección General', ... }
+  let deptMap = {}; // { 'A1': { '01': 'Dirección General', ... }, ... }
   let busqueda = "";
   let empleadoEncontrado = false;
   let documentoId = null;
 
+  async function fetchAreaMap() {
+    const docRef = doc(db, "areas", "doc");
+    const docSnap = await getDoc(docRef);
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+      for (const [areaName, areaId] of Object.entries(data)) {
+        areaMap[areaId] = areaName;
+      }
+    }
+  }
+
+  async function fetchDeptMap() {
+    const snapshot = await getDocs(collection(db, "departamentos"));
+    snapshot.forEach(docSnap => {
+      const areaId = docSnap.id;
+      const data = docSnap.data();
+      deptMap[areaId] = {};
+      for (const [deptName, deptId] of Object.entries(data)) {
+        deptMap[areaId][deptId] = deptName;
+      }
+    });
+  }
+
+  await fetchAreaMap();
+  await fetchDeptMap();
+
   // Renderizamos la interfaz
+  const areaOptions = Object.entries(areaMap).map(([areaId, areaName]) => `<option value="${areaId}">${areaName}</option>`).join('');
+
   container.innerHTML = `
     <div class="agregar-empleado-container">
       <h2>Agregar Empleado</h2>
@@ -109,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <label>Área:</label>
           <select id="areaSeleccionada" required>
             <option value="">Seleccione un área</option>
-            ${Object.keys(areaCodes).map(area => `<option value="${area}">${area}</option>`).join('')}
+            ${areaOptions}
           </select>
         </div>
         <div class="campo">
@@ -135,52 +115,36 @@ document.addEventListener('DOMContentLoaded', () => {
           </select>
         </div>
         <button type="button" id="btnGuardar">
-          ${empleadoEncontrado ? 'Guardar Cambios' : 'Guardar Empleado'}
+          Guardar Empleado
         </button>
       </form>
     </div>
   `;
 
-  // Obtener referencias a los elementos
-  const inputBusqueda = document.getElementById('busqueda');
-  const btnBuscar = document.getElementById('btnBuscar');
-  const mensajeEmpleado = document.getElementById('mensajeEmpleado');
-  const formEmpleado = document.getElementById('formEmpleado');
-  const inputCorreo = document.getElementById('correo');
-  const inputIdUsuario = document.getElementById('idUsuario');
-  const selectTipoUsuario = document.getElementById('tipoUsuario');
-  const inputNombre = document.getElementById('nombre');
-  const inputFechaContratacion = document.getElementById('fechaContratacion');
-  const inputPuesto = document.getElementById('puesto');
-  const inputFoto = document.getElementById('foto');
-  const inputNumeroTelefono = document.getElementById('numeroTelefono');
   const selectArea = document.getElementById('areaSeleccionada');
   const selectDepartamento = document.getElementById('departamentoSeleccionado');
   const campoDocente = document.getElementById('campoDocente');
   const selectDocente = document.getElementById('docenteSeleccionado');
-  const selectTipoEmpleado = document.getElementById('tipoEmpleadoSeleccionado');
-  const btnGuardar = document.getElementById('btnGuardar');
 
-  // Función para actualizar el select de departamentos según el área seleccionada
   function actualizarDepartamento() {
-    const area = selectArea.value;
-    selectDepartamento.innerHTML = `<option value="">Seleccione un departamento</option>`;
-    if (area && departmentCodes[area]) {
-      Object.keys(departmentCodes[area]).forEach(dep => {
+    const areaId = selectArea.value;
+    selectDepartamento.innerHTML = '<option value="">Seleccione un departamento</option>';
+    if (deptMap[areaId]) {
+      Object.entries(deptMap[areaId]).forEach(([deptId, deptName]) => {
         const option = document.createElement('option');
-        option.value = dep;
-        option.textContent = dep;
+        option.value = deptId;
+        option.textContent = deptName;
         selectDepartamento.appendChild(option);
       });
     }
-    // Mostrar u ocultar el campo de docente según el área
-    if (area === 'Docentes') {
+    if (areaMap[areaId] === 'Docentes') {
       campoDocente.style.display = 'block';
     } else {
       campoDocente.style.display = 'none';
       selectDocente.value = "";
     }
   }
+
   selectArea.addEventListener('change', actualizarDepartamento);
 
   // Función para buscar empleado por ID

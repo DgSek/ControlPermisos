@@ -3,70 +3,21 @@ import { db } from '../BD/firebaseConfig.js';
 import { collection, doc, getDoc, getDocs, query, where, updateDoc, addDoc, deleteDoc, Timestamp } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 import { getAuth, signOut } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-auth.js';
 
-
 // SweetAlert2
 import Swal from 'https://cdn.jsdelivr.net/npm/sweetalert2@11/+esm';
+
 // VARIABLES GLOBALES PARA GESTIONAR EMPLEADOS Y SOLICITUDES
 let allEmployees = [];
-let areaMap = {};
-let deptMap = {};
+let areaMap = {};   // { 'A1': 'Dirección General', ... }
+let deptMap = {};   // { 'A1': { '01': 'Dirección General', ... }, ... }
 let currentEmployeeDocId = null;
-let currentEmpSolicitud = null; // Almacena el empleado seleccionado para la solicitud
-let archivosAdjuntos = [];     // Almacena los archivos seleccionados en la solicitud
-
-// CONSTANTES DE ÁREAS Y DEPARTAMENTOS
-const areaCodes = {
-  'Dirección General': 'A1',
-  'Subdirección de planeación y vinculación': 'A2',
-  'Subdirección de servicios administrativos': 'A3',
-  'Subdirección académica': 'A4',
-  'Docentes': 'A5'
-};
-
-const departmentCodes = {
-  'Dirección General': {
-    'Dirección General': '01',
-    'Innovación y calidad': '02',
-  },
-  'Subdirección de planeación y vinculación': {
-    'Subdirección de planeación y vinculación': '01',
-    'Departamento de servicios escolares': '02',
-    'Departamento de vinculación y extensión': '04',
-    'Biblioteca': '05',
-    'Médico General': '06',
-  },
-  'Subdirección de servicios administrativos': {
-    'Subdirección de servicios administrativos': '01',
-    'Departamento de recursos financieros': '02',
-    'Departamento de recursos humanos': '03',
-    'Departamento del centro de cómputo': '04',
-    'Laboratorio': '05',
-    'Departamento de recursos materiales y servicios generales': '06',
-    'Archivos generales': '07',
-    'Mantenimiento e intendencia': '08',
-    'Vigilante': '09',
-  },
-  'Subdirección académica': {
-    'Subdirección académica': '01',
-    'Jefes de división': '02',
-    'Departamento de psicología': '03',
-    'Trabajo social': '04',
-    'Laboratorios': '05',
-  },
-  'Docentes': {
-    'Ingeniería Industrial': '01',
-    'Lic. Administración': '02',
-    'Ing. Sistemas computacionales': '03',
-    'Ing. Civil': '04',
-    'Extraescolares': '05',
-    'Coordinación de lenguas': '06',
-  },
-};
+let currentEmpSolicitud = null;
+let archivosAdjuntos = [];
 
 // ELEMENTOS DEL DOM
 const employeesContainer = document.getElementById('employeesContainer');
 
-// --- FUNCIONES PARA CARGAR Y RENDERIZAR EMPLEADOS ---
+// --- CARGA DINÁMICA DE ÁREAS Y DEPARTAMENTOS DESDE FIRESTORE ---
 async function fetchAreaMap() {
   const docRef = doc(db, "areas", "doc");
   const docSnap = await getDoc(docRef);
@@ -82,11 +33,11 @@ async function fetchDeptMap() {
   const deptCollectionRef = collection(db, "departamentos");
   const snapshot = await getDocs(deptCollectionRef);
   snapshot.forEach(docSnap => {
-    const docId = docSnap.id;
+    const areaId = docSnap.id;
     const data = docSnap.data();
-    deptMap[docId] = {};
+    deptMap[areaId] = {};
     for (const [deptName, deptId] of Object.entries(data)) {
-      deptMap[docId][deptId] = deptName;
+      deptMap[areaId][deptId] = deptName;
     }
   });
 }
@@ -116,7 +67,7 @@ function renderEmployees(employeesList) {
       deptName = deptMap[Area][Departamento] || `Depto. desconocido (${Departamento})`;
     }
 
-     html += `
+    html += `
   <div class="card">
     <!-- botón de borrar en esquina, con onclick y cerrado -->
     <button
@@ -192,8 +143,8 @@ window.deleteEmployee = deleteEmployee;
 
 async function buscarUsuario(queryText) {
   function removeDiacritics(str) {
-  return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-}
+    return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  }
 
   if (!queryText) {
     renderEmployees(allEmployees);
@@ -269,29 +220,33 @@ function populateAreaSelect() {
   const selectArea = document.getElementById('areaSeleccionada');
   if (!selectArea) return;
   selectArea.innerHTML = '<option value="">Seleccione un área</option>';
-  Object.keys(areaCodes).forEach(areaName => {
+
+  // Usar areaMap que tiene estructura: { 'A1': 'Dirección General', ... }
+  Object.entries(areaMap).forEach(([areaId, areaName]) => {
     const option = document.createElement('option');
-    option.value = areaName;
+    option.value = areaId; // ahora se guarda el ID directamente
     option.textContent = areaName;
     selectArea.appendChild(option);
   });
 }
 
-function actualizarDepartamentoModal() {
+
+async function actualizarDepartamentoModal() {
   const selectArea = document.getElementById('areaSeleccionada');
   const selectDepartamento = document.getElementById('departamentoSeleccionado');
   const campoDocente = document.getElementById('campoDocente');
   const selectDocente = document.getElementById('docenteSeleccionado');
   const area = selectArea.value;
   selectDepartamento.innerHTML = '<option value="">Seleccione un departamento</option>';
-  if (area && departmentCodes[area]) {
-    Object.keys(departmentCodes[area]).forEach(dep => {
+  if (area && deptMap[area]) {
+    Object.entries(deptMap[area]).forEach(([depId, depName]) => {
       const option = document.createElement('option');
-      option.value = dep;
-      option.textContent = dep;
+      option.value = depId;
+      option.textContent = depName;
       selectDepartamento.appendChild(option);
     });
   }
+
   if (area === 'Docentes') {
     campoDocente.style.display = 'block';
   } else {
@@ -314,7 +269,7 @@ async function guardarEmpleado() {
   const selectDocente = document.getElementById('docenteSeleccionado');
   const selectTipoEmpleado = document.getElementById('tipoEmpleadoSeleccionado');
 
-// 1) Correo válido
+  // 1) Correo válido
   const correoVal = inputCorreo.value.trim();
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!correoVal || !emailRegex.test(correoVal)) {
@@ -397,8 +352,8 @@ async function guardarEmpleado() {
     puesto: inputPuesto.value.trim(),
     Foto: inputFoto.value.trim(),
     numero_telefono: inputNumeroTelefono.value.trim(),
-    Area: areaCodes[selectArea.value] || '',
-    Departamento: (departmentCodes[selectArea.value] || {})[selectDepartamento.value] || '',
+    Area: selectArea.value,  // ya es el ID directamente
+    Departamento: selectDepartamento.value,
     Docente: selectDocente.value || null,
     TipoEmpleado: selectTipoEmpleado.value,
   };
@@ -419,11 +374,12 @@ async function guardarEmpleado() {
 }
 
 
-function cargarEmpleado(emp) {
+async function cargarEmpleado(emp) {
   document.getElementById('correo').value = emp.correo || '';
   document.getElementById('idUsuario').value = emp.id_usuario || '';
   document.getElementById('tipoUsuario').value = emp.tipo_usuario || 'usuario';
   document.getElementById('nombre').value = emp.nombre || '';
+
   if (emp.fecha_contratacion) {
     let fecha = '';
     if (emp.fecha_contratacion.toDate) {
@@ -435,19 +391,29 @@ function cargarEmpleado(emp) {
   } else {
     document.getElementById('fechaContratacion').value = '';
   }
+
   document.getElementById('puesto').value = emp.puesto || '';
   document.getElementById('foto').value = emp.Foto || '';
   document.getElementById('numeroTelefono').value = emp.numero_telefono || '';
-  const areaEncontrada = Object.keys(areaCodes).find(key => areaCodes[key] === emp.Area) || '';
-  document.getElementById('areaSeleccionada').value = areaEncontrada;
-  actualizarDepartamentoModal();
-  document.getElementById('departamentoSeleccionado').value = Object.keys(departmentCodes[areaEncontrada] || {}).find(
-    key => departmentCodes[areaEncontrada][key] === emp.Departamento
-  ) || '';
+
+  // Establece el área
+  const areaId = emp.Area || '';
+  document.getElementById('areaSeleccionada').value = areaId;
+
+  // Esperamos a que los departamentos se carguen según el área
+  await actualizarDepartamentoModal(); // debe ser async también si carga opciones desde mapa
+
+  // Luego seleccionamos el departamento por coincidencia exacta o por nombre
+ // Seleccionamos el departamento por ID directamente
+document.getElementById('departamentoSeleccionado').value = emp.Departamento || '';
+
+
   document.getElementById('docenteSeleccionado').value = emp.Docente || '';
   document.getElementById('tipoEmpleadoSeleccionado').value = emp.TipoEmpleado || '';
   currentEmployeeDocId = emp.id || null;
 }
+
+
 
 function openModalEmpleado(empId) {
   const emp = window.allEmployees.find(e => String(e.id_usuario) === String(empId));
@@ -461,7 +427,35 @@ function openModalEmpleado(empId) {
 }
 
 // --- EVENTOS DE INICIALIZACIÓN ---
+// --- FUNCIONES PARA OBTENER JEFES Y PUESTOS DESDE FIRESTORE ---
+async function fetchJefesYPuestos() {
+  const jefes = [];
+  const puestos = [];
+
+  try {
+    const jefesSnap = await getDocs(collection(db, "jefesInmediatos"));
+    jefesSnap.forEach(doc => {
+      const data = doc.data();
+      if (data.nombre) jefes.push(data.nombre);
+    });
+
+    const puestosSnap = await getDocs(collection(db, "puestosJefes"));
+    puestosSnap.forEach(doc => {
+      Object.values(doc.data()).forEach(nombre => {
+        if (typeof nombre === "string") puestos.push(nombre);
+      });
+    });
+
+  } catch (error) {
+    console.error("Error obteniendo jefes o puestos:", error);
+  }
+
+  return { jefes, puestos };
+}
+
+// --- EVENTOS DE INICIALIZACIÓN ---
 document.addEventListener('DOMContentLoaded', async () => {
+
   // Inicializar el select de áreas para el modal de empleado
   if (document.getElementById('areaSeleccionada')) {
     populateAreaSelect();
@@ -519,36 +513,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   };
 
-  // Listas de jefes inmediatos y puestos para solicitud
-  const jefesInmediatos = [
-    "ARQ. JESUS RAFAEL SANCHEZ SEBREROS",
-    "C.P ALVARO MARTIN PEREZ MANJARREZ",
-    "LIC. MARITZA JOANA LOPEZ MARTINEZ",
-    "LIC. SAUL MADERO TORRES",
-    "LIC. LUIS PEREZ VALENZUELA",
-    "C.P DAVID ALEJANDRO SOTO GRIJALVA",
-    "PSIC. LAURA FANI SILVA RIOS",
-    "MDE. CLAUDIA ISABEL PONCE OROZCO",
-    "ING. RODRIGO GARCIA HERNANDEZ",
-    "ING. MARCO ANTONIO PEREZ ELIAS",
-    "MTRO. GABRIEL RIVERA SOLIS",
-    "LIC. LUCIA HERNANDEZ SOTO",
-    "LIC. SAMANTHA FATIMA SANTANA HERNANDEZ",
-    "LIC. CELIA YADIRA SOTELO CASTRO",
-    "LIC. DULCE JAQUELINE CORRAL CUADRAS"
-  ];
-  const puestosJefes = [
-    "DIRECTOR GENERAL",
-    "SUBDIRECCION DE SERVICIOS ADMINISTRATIVOS",
-    "SUBDIRECCION DE PLANEACION Y VINCULACION",
-    "SUBDIRECCION ACADEMICA"
-  ];
+  const { jefes, puestos } = await fetchJefesYPuestos();
+  populateSelect('nombreJefe', jefes);
+  populateSelect('puestoJefe', puestos);
+  populateSelect('jefeAutoriza', jefes);
+  populateSelect('puestoJefeAutoriza', puestos);
 
-  // Poblar los selects de jefes y puestos en el modal de solicitud
-  populateSelect('nombreJefe', jefesInmediatos);
-  populateSelect('puestoJefe', puestosJefes);
-  populateSelect('jefeAutoriza', jefesInmediatos);
-  populateSelect('puestoJefeAutoriza', puestosJefes);
 
   // Configurar el input de archivos adjuntos en la solicitud
   const fileInput = document.getElementById('fileAdjuntos');
@@ -611,65 +581,65 @@ async function enviarSolicitud() {
   // 1) Validaciones...
   const motivoFalta = document.getElementById('motivoFalta').value.trim();
   const inicioDate = document.getElementById('fechaInicio').value;
-  const finDate    = document.getElementById('fechaFin').value;
-  const tipoPerm   = document.getElementById('tipoPermiso').value;
-  const horasFalt  = tipoPerm === "Parcial"
-                    ? document.getElementById('horasFalta').value.trim()
-                    : null;
-  const autoriz    = document.getElementById('autorizacion').value;
-  const nomJ       = document.getElementById('nombreJefe').value;
-  const puestoJ    = document.getElementById('puestoJefe').value;
-  const nomA       = document.getElementById('jefeAutoriza').value;
-  const puestoA    = document.getElementById('puestoJefeAutoriza').value;
-  const horaIni    = document.getElementById('horarioInicio').value;
-  const horaFin    = document.getElementById('horarioFin').value;
+  const finDate = document.getElementById('fechaFin').value;
+  const tipoPerm = document.getElementById('tipoPermiso').value;
+  const horasFalt = tipoPerm === "Parcial"
+    ? document.getElementById('horasFalta').value.trim()
+    : null;
+  const autoriz = document.getElementById('autorizacion').value;
+  const nomJ = document.getElementById('nombreJefe').value;
+  const puestoJ = document.getElementById('puestoJefe').value;
+  const nomA = document.getElementById('jefeAutoriza').value;
+  const puestoA = document.getElementById('puestoJefeAutoriza').value;
+  const horaIni = document.getElementById('horarioInicio').value;
+  const horaFin = document.getElementById('horarioFin').value;
 
   if (!motivoFalta) {
-    await Swal.fire("Falta motivo","Ingresa el motivo de la falta.","warning");
+    await Swal.fire("Falta motivo", "Ingresa el motivo de la falta.", "warning");
     btn.disabled = false; return;
   }
   if (!inicioDate || !finDate) {
-    await Swal.fire("Falta fechas","Selecciona fecha de inicio y fin.","warning");
+    await Swal.fire("Falta fechas", "Selecciona fecha de inicio y fin.", "warning");
     btn.disabled = false; return;
   }
   if (new Date(inicioDate) > new Date(finDate)) {
-    await Swal.fire("Fechas inválidas","La fecha de inicio no puede superar a la de fin.","warning");
+    await Swal.fire("Fechas inválidas", "La fecha de inicio no puede superar a la de fin.", "warning");
     btn.disabled = false; return;
   }
   if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(horaIni) ||
-      !/^([01]\d|2[0-3]):[0-5]\d$/.test(horaFin)) {
-    await Swal.fire("Formato horario","Usa HH:mm para inicio y fin.","warning");
+    !/^([01]\d|2[0-3]):[0-5]\d$/.test(horaFin)) {
+    await Swal.fire("Formato horario", "Usa HH:mm para inicio y fin.", "warning");
     btn.disabled = false; return;
   }
   if (!tipoPerm) {
-    await Swal.fire("Falta tipo","Selecciona un tipo de permiso.","warning");
+    await Swal.fire("Falta tipo", "Selecciona un tipo de permiso.", "warning");
     btn.disabled = false; return;
   }
   if (tipoPerm === "Parcial" &&
-      !/^([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d$/.test(horasFalt)) {
-    await Swal.fire("Horario parcial","Usa formato HH:mm-HH:mm.","warning");
+    !/^([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d$/.test(horasFalt)) {
+    await Swal.fire("Horario parcial", "Usa formato HH:mm-HH:mm.", "warning");
     btn.disabled = false; return;
   }
   if (!autoriz) {
-    await Swal.fire("Falta autorización","Selecciona el tipo de autorización.","warning");
+    await Swal.fire("Falta autorización", "Selecciona el tipo de autorización.", "warning");
     btn.disabled = false; return;
   }
   if (!nomJ || !puestoJ) {
-    await Swal.fire("Falta jefe inmediato","Selecciona nombre y puesto.","warning");
+    await Swal.fire("Falta jefe inmediato", "Selecciona nombre y puesto.", "warning");
     btn.disabled = false; return;
   }
   if (!nomA || !puestoA) {
-    await Swal.fire("Falta quien autoriza","Selecciona nombre y puesto.","warning");
+    await Swal.fire("Falta quien autoriza", "Selecciona nombre y puesto.", "warning");
     btn.disabled = false; return;
   }
   if (archivosAdjuntos.length === 0) {
-    await Swal.fire("Sin adjuntos","Agrega al menos un PDF o JPG.","warning");
+    await Swal.fire("Sin adjuntos", "Agrega al menos un PDF o JPG.", "warning");
     btn.disabled = false; return;
   }
   for (const f of archivosAdjuntos) {
     const ext = f.name.split('.').pop().toLowerCase();
-    if (!['pdf','jpg','jpeg'].includes(ext)) {
-      await Swal.fire("Tipo inválido","Solo PDF o JPG.","warning");
+    if (!['pdf', 'jpg', 'jpeg'].includes(ext)) {
+      await Swal.fire("Tipo inválido", "Solo PDF o JPG.", "warning");
       btn.disabled = false; return;
     }
   }
@@ -678,7 +648,7 @@ async function enviarSolicitud() {
   const numPerm = "1";
   const { id_usuario, Area, Departamento } = currentEmpSolicitud;
   const idPermiso = `${Area}${Departamento}${numPerm}-${id_usuario}`;
-  const fechaSol = new Date().toLocaleString("en-US",{ timeZone:"America/Hermosillo" });
+  const fechaSol = new Date().toLocaleString("en-US", { timeZone: "America/Hermosillo" });
   const archivos = await Promise.all(
     archivosAdjuntos.map(async file => ({
       nombre: file.name,
@@ -707,14 +677,14 @@ async function enviarSolicitud() {
       archivos_adjuntos: archivos,
       fecha_solicitud: fechaSol
     });
-    await Swal.fire("¡Listo!","Solicitud enviada correctamente.","success");
+    await Swal.fire("¡Listo!", "Solicitud enviada correctamente.", "success");
     document.getElementById('form-permiso').reset();
     archivosAdjuntos = [];
     document.getElementById('horasFalta').disabled = true;
     closeModalSolicitud();
   } catch (err) {
     console.error(err);
-    await Swal.fire("Error","No se pudo enviar la solicitud.","error");
+    await Swal.fire("Error", "No se pudo enviar la solicitud.", "error");
   } finally {
     btn.disabled = false;
   }

@@ -5,35 +5,35 @@ import {
   getDocs, deleteDoc, updateDoc
 } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const container = document.getElementById('detalles-empleados-container');
   const id_usuario = localStorage.getItem('idUsuario');
   if (!id_usuario) return container.innerHTML = `<p>No se encontró información del empleado.</p>`;
 
-  const jefesInmediatos = [
-    "ARQ. JESUS RAFAEL SANCHEZ SEBREROS",
-    "C.P ALVARO MARTIN PEREZ MANJARREZ",
-    "LIC. MARITZA JOANA LOPEZ MARTINEZ",
-    "LIC. SAUL MADERO TORRES",
-    "LIC. LUIS PEREZ VALENZUELA",
-    "C.P DAVID ALEJANDRO SOTO GRIJALVA",
-    "PSIC. LAURA FANI SILVA RIOS",
-    "MDE. CLAUDIA ISABEL PONCE OROZCO",
-    "ING. RODRIGO GARCIA HERNANDEZ",
-    "ING. MARCO ANTONIO PEREZ ELIAS",
-    "MTRO. GABRIEL RIVERA SOLIS",
-    "LIC. LUCIA HERNANDEZ SOTO",
-    "LIC. SAMANTHA FATIMA SANTANA HERNANDEZ",
-    "LIC. CELIA YADIRA SOTELO CASTRO",
-    "LIC. DULCE JAQUELINE CORRAL CUADRAS"
-  ];
+  // Dinámicamente cargamos jefes y puestos desde Firebase
+  let jefesInmediatos = [];
+  let puestosJefes = [];
 
-  const puestosJefes = [
-    "DIRECTOR GENERAL",
-    "SUBDIRECCION DE SERVICIOS ADMINISTRATIVOS",
-    "SUBDIRECCION DE PLANEACION Y VINCULACION",
-    "SUBDIRECCION ACADEMICA"
-  ];
+  async function fetchJefesYPuestos() {
+    try {
+      const jefesSnap = await getDocs(collection(db, "jefesInmediatos"));
+      jefesSnap.forEach(doc => {
+        const data = doc.data();
+        if (data.nombre) jefesInmediatos.push(data.nombre);
+      });
+
+      const puestosSnap = await getDocs(collection(db, "puestosJefes"));
+      puestosSnap.forEach(doc => {
+        Object.values(doc.data()).forEach(nombre => {
+          if (typeof nombre === "string") puestosJefes.push(nombre);
+        });
+      });
+    } catch (error) {
+      console.error("Error obteniendo jefes o puestos:", error);
+    }
+  }
+
+  await fetchJefesYPuestos();
 
   const formatearFecha = (fecha) => {
     if (fecha?.seconds) return new Date(fecha.seconds * 1000).toISOString().split("T")[0];
@@ -207,15 +207,12 @@ document.addEventListener('DOMContentLoaded', () => {
     return contadores;
   };
 
-
   const renderEmployee = (empleado, area, depto, permisos) => {
     const fechaIngreso = formatearFecha(empleado.fecha_contratacion);
     const fotoCruda = empleado.Foto || empleado.foto || '';
     const fotoUrl = (typeof fotoCruda === 'string' && fotoCruda.trim().length > 5)
       ? fotoCruda.trim().replace(/^"|"$/g, '') // quita comillas dobles si están incrustadas
       : 'https://via.placeholder.com/150';
-
-
 
     container.innerHTML = `
       <div class="detalles-empleados">
@@ -236,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="info-subseccion">
               <h2>Permisos solicitados <span id="ver-reportes-icon" style="cursor:pointer;">🗂️</span></h2>
               <p><strong>Personal:</strong> ${permisos.Personal}</p>
-              <p><strong>Salud:</strong> ${permisos.Salud}</p>        <!-- ← nuevo -->
+              <p><strong>Salud:</strong> ${permisos.Salud}</p>
               <p><strong>Sindical:</strong> ${permisos.Sindical}</p>
               <p><strong>Parcial:</strong> ${permisos.Parcial}</p>
             </div>

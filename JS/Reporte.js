@@ -1,5 +1,5 @@
 import { db } from '../BD/firebaseConfig.js';
-import { collection, query, where, getDocs } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
+import { collection, query, where, getDocs, doc, getDoc } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
 import * as XLSX from 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -38,61 +38,75 @@ document.addEventListener('DOMContentLoaded', () => {
     document.querySelector(".sidebar").classList.add("collapsed");
   }
 
-  // -----------------------------
-  // Estado global
-  // -----------------------------
-  let solicitudes = [];
-  let todasLasSolicitudes = [];
-  let tituloReporte = 'Seleccione "General" para ver el reporte de permisos.';
-  let empleados = [];
-  let empleadoSeleccionado = "";
-  let fechaInicio = "";
-  let fechaFin = "";
+ // -----------------------------
+// Estado global
+// -----------------------------
+let solicitudes = [];
+let todasLasSolicitudes = [];
+let tituloReporte = 'Seleccione "General" para ver el reporte de permisos.';
+let empleados = [];
+let empleadoSeleccionado = "";
+let fechaInicio = "";
+let fechaFin = "";
 
-  const primaryMenuEl = document.getElementById('primary-menu');
-  const reporteContenidoEl = document.getElementById('reporte-contenido');
+// Estos dos se llenarán dinámicamente desde Firestore
+let areaCodes = {};
+let departmentCodes = {};
 
-  const areaCodes = {
-    'Dirección General': 'A1',
-    'Subdirección de planeación y vinculación': 'A2',
-    'Subdirección de servicios administrativos': 'A3',
-    'Subdirección académica': 'A4',
-    'Docentes': 'A5'
-  };
-  const departmentCodes = {
-    'Dirección General': { 'Dirección General': '01', 'Innovación y calidad': '02' },
-    'Subdirección de planeación y vinculación': {
-      'Subdirección de planeación y vinculación': '01',
-      'Departamento de servicios escolares': '02',
-      'Departamento de vinculación y extensión': '04',
-      'Biblioteca': '05',
-      'Médico General': '06'
-    },
-    'Subdirección de servicios administrativos': {
-      'Subdirección de servicios administrativos': '01',
-      'Departamento de recursos financieros': '02',
-      'Departamento de recursos humanos': '03',
-      'Departamento del centro de cómputo': '04',
-      'Laboratorio': '05',
-      'Departamento de recursos materiales y servicios generales': '06',
-      'Archivos generales': '07',
-      'Mantenimiento e intendencia': '08',
-      'Vigilante': '09'
-    },
-    'Subdirección académica': {
-      'Subdirección académica': '01', 'Jefes de división': '02',
-      'Departamento de psicología': '03', 'Trabajo social': '04', 'Laboratorios': '05'
-    },
-    'Docentes': {
-      'Ingeniería Industrial': '01', 'Lic. Administración': '02',
-      'Ing. Sistemas computacionales': '03', 'Ing. Civil': '04',
-      'Extraescolares': '05', 'Coordinación de lenguas': '06'
+const primaryMenuEl = document.getElementById('primary-menu');
+const reporteContenidoEl = document.getElementById('reporte-contenido');
+
+// -----------------------------
+// Cargar estructura desde Firestore
+// -----------------------------
+async function cargarEstructuraAreasYDepartamentos() {
+  try {
+    const docRef = doc(db, 'areas', 'doc');
+    const docSnap = await getDoc(docRef);
+
+    if (docSnap.exists()) {
+      const data = docSnap.data();
+
+      // Define el orden deseado manualmente
+      const ordenCorrecto = [
+        'Dirección General',
+        'Subdirección de planeación y vinculación',
+        'Subdirección de servicios administrativos',
+        'Subdirección académica',
+        'Docentes'
+      ];
+
+      areaCodes = {};
+      departmentCodes = {};
+
+      for (const nombreArea of ordenCorrecto) {
+        if (data[nombreArea]) {
+          areaCodes[nombreArea] = data[nombreArea];
+          departmentCodes[nombreArea] = {};
+        }
+      }
+
+      const deptSnap = await getDocs(collection(db, 'departamentos'));
+      deptSnap.forEach(doc => {
+        const codigoArea = doc.id;
+        const dataDeptos = doc.data();
+        const nombreArea = Object.keys(areaCodes).find(k => areaCodes[k] === codigoArea);
+        if (nombreArea) {
+          for (const [nombreDepto, codigoDepto] of Object.entries(dataDeptos)) {
+            departmentCodes[nombreArea][nombreDepto] = codigoDepto;
+          }
+        }
+      });
     }
-  };
+  } catch (error) {
+    console.error("Error cargando áreas y departamentos desde Firestore:", error);
+  }
+}
 
-  // -----------------------------
-  // Fetch de datos
-  // -----------------------------
+// -----------------------------
+// Fetch de datos
+// -----------------------------
+
   function extractEmployeeNumbers(list) {
     return list.map(s => s.id_permiso.split('-')[1]);
   }
@@ -197,18 +211,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // ================================
   //   Render del menú lateral
   // ================================
-  function renderPrimaryMenu() {
-  const areaIcons = {
-    'Dirección General': 'account_balance',
-    'Subdirección de planeación y vinculación': 'insights',
-    'Subdirección de servicios administrativos': 'build',
-    'Subdirección académica': 'school',
-    'Docentes': 'groups'
-  };
+ // Íconos asociados a las áreas (definido globalmente o justo antes de renderPrimaryMenu)
+const areaIcons = {
+  'dirección general': 'account_balance',
+  'subdirección de planeación y vinculación': 'insights',
+  'subdirección de servicios administrativos': 'build',
+  'subdirección académica': 'school',
+  'docentes': 'groups'
+};
 
+// ================================
+//   Render del menú lateral
+// ================================
+function renderPrimaryMenu() {
   let html = '';
+
   for (const area in areaCodes) {
-    const icon = areaIcons[area] || 'folder';
+    const areaKey = area.trim().toLowerCase(); // Normalizar
+    const icon = areaIcons[areaKey] || 'folder'; // Fallback si no existe
 
     html += `
       <li class="nav-item dropdown-container">
@@ -243,8 +263,6 @@ document.addEventListener('DOMContentLoaded', () => {
   primaryMenuEl.innerHTML = html;
   bindDropdownToggles();
 }
-
-
   // ================================
   //   Render de tarjetas + gráficas
   // ================================
@@ -454,50 +472,52 @@ document.addEventListener('DOMContentLoaded', () => {
   window.handleFiltrarPorFecha = handleFiltrarPorFecha;
   window.exportToExcel = exportToExcel;
 
-  // Render inicial
-  renderPrimaryMenu();
-  renderReporteContent();
+  // Render inicial después de cargar Firestore
+  cargarEstructuraAreasYDepartamentos().then(() => {
+    renderPrimaryMenu();
+    renderReporteContent();
 
-  // -----------------------------
-  // Portal dinámico (sin cambios)
-  // -----------------------------
-  let portal = document.getElementById("portal-submenu");
-  if (!portal) {
-    portal = document.createElement("div");
-    portal.id = "portal-submenu";
-    portal.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;";
-    document.body.appendChild(portal);
-  }
-  document.querySelectorAll(".dropdown-container").forEach(container => {
-    const submenu = container.querySelector(".dropdown-menu");
-    const pd = document.createElement("div");
-    pd.className = "portal-dropdown";
-    const clone = submenu.cloneNode(true);
-    clone.style.display = "block";
-    pd.appendChild(clone);
-    pd.style.position = "fixed";
-    pd.style.pointerEvents = "auto";
-    pd.style.display = "none";
-    portal.appendChild(pd);
-    let hideTimeout;
-    function show() {
-      if (!document.querySelector(".sidebar").classList.contains("collapsed")) return;
-      const r = container.getBoundingClientRect();
-      let left = r.right - 2, top = r.top;
-      pd.style.display = "block";
-      const w = pd.offsetWidth, h = pd.offsetHeight;
-      if (left + w > innerWidth) left = r.left - w + 2;
-      if (top + h > innerHeight) top = innerHeight - h - 10;
-      pd.style.left = `${Math.max(0, left)}px`;
-      pd.style.top = `${Math.max(0, top)}px`;
+    // -----------------------------
+    // Portal dinámico (después del render)
+    // -----------------------------
+    let portal = document.getElementById("portal-submenu");
+    if (!portal) {
+      portal = document.createElement("div");
+      portal.id = "portal-submenu";
+      portal.style.cssText = "position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;";
+      document.body.appendChild(portal);
     }
-    function hide() { pd.style.display = "none"; }
-    container.addEventListener("mouseenter", () => { clearTimeout(hideTimeout); show(); });
-    container.addEventListener("mouseleave", () => { hideTimeout = setTimeout(hide, 200); });
-    pd.addEventListener("mouseenter", () => { clearTimeout(hideTimeout); show(); });
-    pd.addEventListener("mouseleave", () => { hideTimeout = setTimeout(hide, 200); });
+    document.querySelectorAll(".dropdown-container").forEach(container => {
+      const submenu = container.querySelector(".dropdown-menu");
+      const pd = document.createElement("div");
+      pd.className = "portal-dropdown";
+      const clone = submenu.cloneNode(true);
+      clone.style.display = "block";
+      pd.appendChild(clone);
+      pd.style.position = "fixed";
+      pd.style.pointerEvents = "auto";
+      pd.style.display = "none";
+      portal.appendChild(pd);
+      let hideTimeout;
+      function show() {
+        if (!document.querySelector(".sidebar").classList.contains("collapsed")) return;
+        const r = container.getBoundingClientRect();
+        let left = r.right - 2, top = r.top;
+        pd.style.display = "block";
+        const w = pd.offsetWidth, h = pd.offsetHeight;
+        if (left + w > innerWidth) left = r.left - w + 2;
+        if (top + h > innerHeight) top = innerHeight - h - 10;
+        pd.style.left = `${Math.max(0, left)}px`;
+        pd.style.top = `${Math.max(0, top)}px`;
+      }
+      function hide() { pd.style.display = "none"; }
+      container.addEventListener("mouseenter", () => { clearTimeout(hideTimeout); show(); });
+      container.addEventListener("mouseleave", () => { hideTimeout = setTimeout(hide, 200); });
+      pd.addEventListener("mouseenter", () => { clearTimeout(hideTimeout); show(); });
+      pd.addEventListener("mouseleave", () => { hideTimeout = setTimeout(hide, 200); });
+    });
   });
-});
+
 window.verArchivosAdjuntos = function (archivos) {
   archivos.forEach((archivo, index) => {
     const win = window.open();
@@ -512,4 +532,4 @@ window.verArchivosAdjuntos = function (archivos) {
       `;
     }
   });
-};
+}});
