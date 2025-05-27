@@ -605,148 +605,118 @@ function fileToBase64(file) {
 
 // --- FUNCIONES PARA ENVIAR SOLICITUD ---
 async function enviarSolicitud() {
-  const form = document.getElementById('form-permiso');
-  const btnEnviar = document.getElementById("btnEnviarSolicitud");
-  btnEnviar.disabled = true;
+  const btn = document.getElementById("btnEnviarSolicitud");
+  btn.disabled = true;
 
-  // Validación básica de datos de empleado
-  if (!currentEmpSolicitud ||
-      !currentEmpSolicitud.id_usuario ||
-      !currentEmpSolicitud.nombre ||
-      !currentEmpSolicitud.puesto ||
-      !currentEmpSolicitud.Area ||
-      !currentEmpSolicitud.Departamento) {
-    await Swal.fire("Datos incompletos", "Faltan datos del empleado. Verifica la información.", "warning");
-    btnEnviar.disabled = false;
-    return;
-  }
+  // 1) Validaciones...
+  const motivoFalta = document.getElementById('motivoFalta').value.trim();
+  const inicioDate = document.getElementById('fechaInicio').value;
+  const finDate    = document.getElementById('fechaFin').value;
+  const tipoPerm   = document.getElementById('tipoPermiso').value;
+  const horasFalt  = tipoPerm === "Parcial"
+                    ? document.getElementById('horasFalta').value.trim()
+                    : null;
+  const autoriz    = document.getElementById('autorizacion').value;
+  const nomJ       = document.getElementById('nombreJefe').value;
+  const puestoJ    = document.getElementById('puestoJefe').value;
+  const nomA       = document.getElementById('jefeAutoriza').value;
+  const puestoA    = document.getElementById('puestoJefeAutoriza').value;
+  const horaIni    = document.getElementById('horarioInicio').value;
+  const horaFin    = document.getElementById('horarioFin').value;
 
-  const numeroPermiso    = "1";
-  const id_usuario       = currentEmpSolicitud.id_usuario;
-  const nombre           = currentEmpSolicitud.nombre;
-  const puesto           = currentEmpSolicitud.puesto;
-  const areaId           = currentEmpSolicitud.Area;
-  const departamentoId   = currentEmpSolicitud.Departamento;
-  const idPermiso        = `${areaId}${departamentoId}${numeroPermiso}-${id_usuario}`;
-  const fechaSolicitud   = new Date().toLocaleString("en-US", { timeZone: "America/Hermosillo" });
-
-  // Valores del formulario
-   const motivoFalta        = document.getElementById('motivoFalta').value.trim();
-  const fechaInicio        = document.getElementById('fechaInicio').value;
-  const fechaFin           = document.getElementById('fechaFin').value;
-  const tipoPermiso        = document.getElementById('tipoPermiso').value;
-  const horasFalta         = tipoPermiso === "Parcial"
-                              ? document.getElementById('horasFalta').value.trim()
-                              : null;
-  const autorizacion       = document.getElementById('autorizacion').value;
-  const nombreJefe         = document.getElementById('nombreJefe').value;
-  const puestoJefe         = document.getElementById('puestoJefe').value;
-  const jefeAutoriza       = document.getElementById('jefeAutoriza').value;
-  const puestoJefeAutoriza = document.getElementById('puestoJefeAutoriza').value;
-
-  // Inputs de horario separados
-  const inicioEl   = document.getElementById('horarioInicio');
-  const finEl      = document.getElementById('horarioFin');
-  const horaInicio = inicioEl?.value;
-  const horaFin    = finEl?.value;
-  const horarioLaboral = `${horaInicio}-${horaFin}`;
-
-  // 1) Motivo de la falta
   if (!motivoFalta) {
-    await Swal.fire("Falta motivo", "Por favor ingresa el motivo de la falta.", "warning");
-    btnEnviar.disabled = false;
-    return;
+    await Swal.fire("Falta motivo","Ingresa el motivo de la falta.","warning");
+    btn.disabled = false; return;
   }
-
-  // 2) Fechas
-  if (!fechaInicio) {
-    await Swal.fire("Falta fecha", "Selecciona la fecha de inicio.", "warning");
-    btnEnviar.disabled = false;
-    return;
+  if (!inicioDate || !finDate) {
+    await Swal.fire("Falta fechas","Selecciona fecha de inicio y fin.","warning");
+    btn.disabled = false; return;
   }
-  if (!fechaFin) {
-    await Swal.fire("Falta fecha", "Selecciona la fecha de fin.", "warning");
-    btnEnviar.disabled = false;
-    return;
+  if (new Date(inicioDate) > new Date(finDate)) {
+    await Swal.fire("Fechas inválidas","La fecha de inicio no puede superar a la de fin.","warning");
+    btn.disabled = false; return;
   }
-  if (new Date(fechaInicio) > new Date(fechaFin)) {
-    await Swal.fire("Fechas inválidas", "La fecha de inicio no puede ser posterior a la de fin.", "warning");
-    btnEnviar.disabled = false;
-    return;
+  if (!/^([01]\d|2[0-3]):[0-5]\d$/.test(horaIni) ||
+      !/^([01]\d|2[0-3]):[0-5]\d$/.test(horaFin)) {
+    await Swal.fire("Formato horario","Usa HH:mm para inicio y fin.","warning");
+    btn.disabled = false; return;
   }
-
-  // 3) Horario laboral (inicio y fin)
-  const horaRegex = /^([01]\d|2[0-3]):[0-5]\d$/;
-  if (!horaInicio || !horaRegex.test(horaInicio)) {
-    await Swal.fire("Horario inválido", "Ingresa un horario de inicio en formato HH:mm.", "warning");
-    btnEnviar.disabled = false;
-    return;
+  if (!tipoPerm) {
+    await Swal.fire("Falta tipo","Selecciona un tipo de permiso.","warning");
+    btn.disabled = false; return;
   }
-  if (!horaFin || !horaRegex.test(horaFin)) {
-    await Swal.fire("Horario inválido", "Ingresa un horario de fin en formato HH:mm.", "warning");
-    btnEnviar.disabled = false;
-    return;
+  if (tipoPerm === "Parcial" &&
+      !/^([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d$/.test(horasFalt)) {
+    await Swal.fire("Horario parcial","Usa formato HH:mm-HH:mm.","warning");
+    btn.disabled = false; return;
   }
-
-  // 4) Tipo de permiso y horas de falta
-  if (!tipoPermiso) {
-    await Swal.fire("Falta tipo", "Selecciona un tipo de permiso.", "warning");
-    btnEnviar.disabled = false;
-    return;
+  if (!autoriz) {
+    await Swal.fire("Falta autorización","Selecciona el tipo de autorización.","warning");
+    btn.disabled = false; return;
   }
-  if (tipoPermiso === "Parcial") {
-    const horasRegex = /^([01]\d|2[0-3]):[0-5]\d-([01]\d|2[0-3]):[0-5]\d$/;
-    if (!horasFalta || !horasRegex.test(horasFalta)) {
-      await Swal.fire("Formato inválido", "Horas de falta deben ser HH:mm-HH:mm.", "warning");
-      btnEnviar.disabled = false;
-      return;
-    }
+  if (!nomJ || !puestoJ) {
+    await Swal.fire("Falta jefe inmediato","Selecciona nombre y puesto.","warning");
+    btn.disabled = false; return;
   }
-
-  // 5) Tipo de autorización
-  if (!autorizacion) {
-    await Swal.fire("Falta autorización", "Selecciona tipo de autorización.", "warning");
-    btnEnviar.disabled = false;
-    return;
+  if (!nomA || !puestoA) {
+    await Swal.fire("Falta quien autoriza","Selecciona nombre y puesto.","warning");
+    btn.disabled = false; return;
   }
-
-  // 6) Jefes y puestos
-  if (!nombreJefe) {
-    await Swal.fire("Falta jefe", "Selecciona el nombre del jefe inmediato.", "warning");
-    btnEnviar.disabled = false;
-    return;
-  }
-  if (!puestoJefe) {
-    await Swal.fire("Falta puesto", "Selecciona el puesto del jefe inmediato.", "warning");
-    btnEnviar.disabled = false;
-    return;
-  }
-  if (!jefeAutoriza) {
-    await Swal.fire("Falta quien autoriza", "Selecciona el jefe que autoriza el permiso.", "warning");
-    btnEnviar.disabled = false;
-    return;
-  }
-  if (!puestoJefeAutoriza) {
-    await Swal.fire("Falta puesto", "Selecciona el puesto del jefe que autoriza.", "warning");
-    btnEnviar.disabled = false;
-    return;
-  }
-
-  // 7a) Debe haber al menos un archivo adjunto
   if (archivosAdjuntos.length === 0) {
-    await Swal.fire("Falta adjuntar", "Debes agregar al menos un archivo PDF o JPG.", "warning");
-    btnEnviar.disabled = false;
-    return;
+    await Swal.fire("Sin adjuntos","Agrega al menos un PDF o JPG.","warning");
+    btn.disabled = false; return;
+  }
+  for (const f of archivosAdjuntos) {
+    const ext = f.name.split('.').pop().toLowerCase();
+    if (!['pdf','jpg','jpeg'].includes(ext)) {
+      await Swal.fire("Tipo inválido","Solo PDF o JPG.","warning");
+      btn.disabled = false; return;
+    }
   }
 
-  // 7) Archivos adjuntos (solo PDF/JPG)
-  for (const file of archivosAdjuntos) {
-    const ext = file.name.split('.').pop().toLowerCase();
-    if (!['pdf','jpg','jpeg'].includes(ext)) {
-      await Swal.fire("Archivo inválido", "Solo se permiten PDF o JPG.", "warning");
-      btnEnviar.disabled = false;
-      return;
-    }
+  // 2) Construcción de los datos a enviar
+  const numPerm = "1";
+  const { id_usuario, Area, Departamento } = currentEmpSolicitud;
+  const idPermiso = `${Area}${Departamento}${numPerm}-${id_usuario}`;
+  const fechaSol = new Date().toLocaleString("en-US",{ timeZone:"America/Hermosillo" });
+  const archivos = await Promise.all(
+    archivosAdjuntos.map(async file => ({
+      nombre: file.name,
+      tipo: file.type,
+      contenido_base64: await fileToBase64(file)
+    }))
+  );
+
+  // 3) Envío a Firestore
+  try {
+    await addDoc(collection(db, "solicitud"), {
+      id_permiso: idPermiso,
+      id_usuario,
+      nombre_empleado: currentEmpSolicitud.nombre,
+      puesto_empleado: currentEmpSolicitud.puesto,
+      motivo_falta: motivoFalta,
+      rango_fechas: { inicio: inicioDate, fin: finDate },
+      horario_laboral: `${horaIni}-${horaFin}`,
+      tipo_permiso: tipoPerm,
+      horas_falta: horasFalt,
+      autorizacion_goce_sueldo: autoriz,
+      nombre_jefe_inmediato: nomJ,
+      puesto_jefe_inmediato: puestoJ,
+      jefe_autoriza_permiso: nomA,
+      puesto_jefe_autoriza: puestoA,
+      archivos_adjuntos: archivos,
+      fecha_solicitud: fechaSol
+    });
+    await Swal.fire("¡Listo!","Solicitud enviada correctamente.","success");
+    document.getElementById('form-permiso').reset();
+    archivosAdjuntos = [];
+    document.getElementById('horasFalta').disabled = true;
+    closeModalSolicitud();
+  } catch (err) {
+    console.error(err);
+    await Swal.fire("Error","No se pudo enviar la solicitud.","error");
+  } finally {
+    btn.disabled = false;
   }
 }
 
