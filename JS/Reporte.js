@@ -1,6 +1,7 @@
 import { db } from '../BD/firebaseConfig.js';
 import { collection, query, where, getDocs, doc, getDoc } from 'https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore.js';
-import * as XLSX from 'https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';
+import Swal from 'https://cdn.jsdelivr.net/npm/sweetalert2@11/+esm';
+
 
 // Variables globales
 let solicitudes = [];
@@ -121,41 +122,41 @@ document.addEventListener('DOMContentLoaded', () => {
       console.error("Error obteniendo empleados:", e);
     }
   }
-async function fetchSolicitudes(areaCode, departmentCode = null) {
-  try {
-    const ref = collection(db, 'solicitud');
-    const q = departmentCode
-      ? query(ref,
-        where('id_permiso', '>=', `${areaCode}${departmentCode}`),
-        where('id_permiso', '<', `${areaCode}${departmentCode}z`)
-      )
-      : query(ref,
-        where('id_permiso', '>=', `${areaCode}`),
-        where('id_permiso', '<', `${areaCode}z`)
-      );
+  async function fetchSolicitudes(areaCode, departmentCode = null) {
+    try {
+      const ref = collection(db, 'solicitud');
+      const q = departmentCode
+        ? query(ref,
+          where('id_permiso', '>=', `${areaCode}${departmentCode}`),
+          where('id_permiso', '<', `${areaCode}${departmentCode}z`)
+        )
+        : query(ref,
+          where('id_permiso', '>=', `${areaCode}`),
+          where('id_permiso', '<', `${areaCode}z`)
+        );
 
-    const snap = await getDocs(q);
-    const data = snap.docs.map(doc => {
-      const d = doc.data();
-      // Convertir fecha a YYYY-MM-DD
-      const fecha = new Date(d.fecha_solicitud);
-      if (!isNaN(fecha.getTime())) {
-        d.fecha_solicitud = fecha.toISOString().slice(0, 10);
-      } else {
-        d.fecha_solicitud = "0000-00-00";
-      }
-      // Extraer ID de usuario
-      d.id_usuario = d.id_usuario || (d.id_permiso?.split('-')[1]) || '';
-      return d;
-    });
+      const snap = await getDocs(q);
+      const data = snap.docs.map(doc => {
+        const d = doc.data();
+        // Convertir fecha a YYYY-MM-DD
+        const fecha = new Date(d.fecha_solicitud);
+        if (!isNaN(fecha.getTime())) {
+          d.fecha_solicitud = fecha.toISOString().slice(0, 10);
+        } else {
+          d.fecha_solicitud = "0000-00-00";
+        }
+        // Extraer ID de usuario
+        d.id_usuario = d.id_usuario || (d.id_permiso?.split('-')[1]) || '';
+        return d;
+      });
 
-    solicitudes = data;
-    todasLasSolicitudes = data;
-    return data;
-  } catch (e) {
-    console.error("Error obteniendo solicitudes:", e);
+      solicitudes = data;
+      todasLasSolicitudes = data;
+      return data;
+    } catch (e) {
+      console.error("Error obteniendo solicitudes:", e);
+    }
   }
-}
 
 
   // -----------------------------
@@ -209,12 +210,35 @@ async function fetchSolicitudes(areaCode, departmentCode = null) {
     renderReporteContent();
   }
   function exportToExcel() {
-    if (!solicitudes.length) return alert("No hay datos para exportar.");
-    const ws = XLSX.utils.json_to_sheet(solicitudes);
+    if (!solicitudes.length) {
+      Swal.fire("Sin datos", "No hay datos para exportar.", "info");
+      return;
+    }
+
+    // Mapeo personalizado de campos
+    const datosExportar = solicitudes.map(s => ({
+  "ID Empleado": s.id_usuario || '',
+  "Nombre": s.nombre_empleado || '',
+  "Puesto": s.puesto_empleado || '',
+  "Autorizó el Permiso": s.jefe_autoriza_permiso || '',
+  "Motivo de Permiso": s.motivo_falta || '',
+  "Rango de Fechas": s.rango_fechas ? `${s.rango_fechas.inicio} al ${s.rango_fechas.fin}` : '',
+  "Tipo de Permiso": s.tipo_permiso || '',
+  "Horario Laboral": s.horario_laboral || '',
+  "Con/Sin Goce de Sueldo": s.autorizacion_goce_sueldo || '',
+  "Horas de Falta": s.horas_falta?.trim() ? s.horas_falta : "N/A"
+}));
+
+
+    const ws = XLSX.utils.json_to_sheet(datosExportar);
     const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Reportes");
+    XLSX.utils.book_append_sheet(wb, ws, "Reporte Permisos");
     XLSX.writeFile(wb, "reporte_permisos.xlsx");
+
+
+
   }
+
 
   // ================================
   //   Render del menú lateral
@@ -319,7 +343,7 @@ async function fetchSolicitudes(areaCode, departmentCode = null) {
       html += `<p class="mensaje-no-solicitudes">No hay solicitudes en el rango seleccionado.</p>`;
     }
 
-    html += `<button onclick="exportToExcel()" class="export-button">Exportar a Excel</button>`;
+    html += `<button id="btnExportarExcel" class="export-button">Exportar a Excel</button>`;
 
     html += `
     <div class="charts-bar-section">
@@ -342,6 +366,7 @@ async function fetchSolicitudes(areaCode, departmentCode = null) {
     reporteContenidoEl.innerHTML = html;
 
     initCharts();
+    document.getElementById('btnExportarExcel').addEventListener('click', exportToExcel);
   }
 
 
@@ -507,7 +532,7 @@ async function fetchSolicitudes(areaCode, departmentCode = null) {
   window.handleDepartmentClick = handleDepartmentClick;
   window.handleEmployeeSelection = handleEmployeeSelection;
   window.handleFiltrarPorFecha = handleFiltrarPorFecha;
-  window.exportToExcel = exportToExcel;
+
 
   // Render inicial después de cargar Firestore
   cargarEstructuraAreasYDepartamentos().then(() => {
