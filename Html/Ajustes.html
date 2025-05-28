@@ -1,49 +1,142 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
   <meta charset="UTF-8" />
   <title>Ajustes del Sistema</title>
   <link rel="stylesheet" href="../Css/ajustes.css" />
+  <link rel="stylesheet" href="../Css/sideBar.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@24,400,0,0" />
 </head>
+
 <body>
-  <div class="ajustes-container">
-    <h1>⚙️ Panel de Ajustes</h1>
+  <div class="app-container">
 
-    <!-- Tabs -->
-    <div class="tabs">
-      <button class="tab active" data-tab="areas">Áreas</button>
-      <button class="tab" data-tab="departamentos">Departamentos</button>
-      <button class="tab" data-tab="jefes">Jefes Inmediatos</button>
-      <button class="tab" data-tab="puestos">Puestos de Jefes</button>
-    </div>
+    <!-- Sidebar (menú lateral) -->
+    <aside class="sidebar collapsed">
+      <header class="sidebar-header">
+        <a href="#" class="header-logo">
+          <img src="../Imagenes/logo.png" alt="Logo" />
+        </a>
+        <button class="sidebar-toggler">
+          <span class="material-symbols-rounded">chevron_left</span>
+        </button>
+      </header>
+      <nav class="sidebar-nav">
+        <ul class="nav-list primary-nav">
+          <li class="nav-item">
+            <a href="principalAdmin.html" class="nav-link">
+              <span class="material-symbols-rounded">home</span>
+              <span class="nav-label">Inicio</span>
+            </a>
+          </li>
+          <li class="nav-item dropdown-container">
+            <a href="#" class="nav-link dropdown-toggle">
+              <span class="material-symbols-rounded">support_agent</span>
+              <span class="nav-label">Servicios</span>
+              <span class="dropdown-icon material-symbols-rounded">keyboard_arrow_down</span>
+            </a>
+            <ul class="dropdown-menu">
+              <li class="nav-item">
+                <a href="agregarEmpleado.html" class="nav-link dropdown-link">Agregar empleado</a>
+              </li>
+              <li class="nav-item">
+                <a href="Reporte.html" class="nav-link dropdown-link">Reporte</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-item">
+            <a href="preguntasFrecuentes.html" class="nav-link">
+              <span class="material-symbols-rounded">question_mark</span>
+              <span class="nav-label">Preguntas</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="Ajustes.html" class="nav-link">
+              <span class="material-symbols-rounded">settings</span>
+              <span class="nav-label">Ajustes</span>
+            </a>
+          </li>
+        </ul>
+        <ul class="nav-list secondary-nav">
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <span class="material-symbols-rounded">help</span>
+              <span class="nav-label">Support</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" id="btnCerrarSesion">
+              <span class="material-symbols-rounded">logout</span>
+              <span class="nav-label">Sign Out</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
+    </aside>
 
-    <!-- Áreas -->
-    <div class="tab-content active" id="areas">
-      <h2>Modificar Áreas</h2>
-      <div id="lista-areas"></div>
-    </div>
+    <!-- Botón para abrir/cerrar el sidebar (útil en móviles) -->
+    <button class="sidebar-menu-button">
+      <span class="material-symbols-rounded">menu</span>
+    </button>
 
-    <!-- Departamentos -->
-    <div class="tab-content" id="departamentos">
-      <h2>Modificar Departamentos</h2>
-      <label for="select-area">Selecciona un área:</label>
-      <select id="select-area"></select>
-      <div id="lista-departamentos"></div>
-    </div>
+    <!-- Contenido principal -->
+    <div class="content-container">
+      <div class="ajustes-container">
+        <h1>⚙️ Panel de Ajustes</h1>
 
-    <!-- Jefes -->
-    <div class="tab-content" id="jefes">
-      <h2>Modificar Jefes Inmediatos</h2>
-      <div id="lista-jefes"></div>
-    </div>
+        <!-- Tabs -->
+        <div class="tabs">
+          <button class="tab active" data-tab="areas">Áreas</button>
+          <button class="tab" data-tab="departamentos">Departamentos</button>
+          <button class="tab" data-tab="jefes">Jefes Inmediatos</button>
+          <button class="tab" data-tab="puestos">Puestos de Jefes</button>
+          <button class="tab" data-tab="limites">Límites de Permisos</button>
+        </div>
 
-    <!-- Puestos -->
-    <div class="tab-content" id="puestos">
-      <h2>Modificar Puestos de Jefes</h2>
-      <div id="lista-puestos"></div>
+        <!-- Áreas -->
+        <div class="tab-content active" id="areas">
+          <h2>Modificar Áreas</h2>
+          <div id="lista-areas"></div>
+        </div>
+
+        <!-- Departamentos -->
+        <div class="tab-content" id="departamentos">
+          <h2>Modificar Departamentos</h2>
+          <label for="select-area">Selecciona un área:</label>
+          <select id="select-area"></select>
+          <div id="lista-departamentos"></div>
+        </div>
+
+        <!-- Jefes -->
+        <div class="tab-content" id="jefes">
+          <h2>Modificar Jefes Inmediatos</h2>
+          <div id="lista-jefes"></div>
+        </div>
+
+        <!-- Puestos -->
+        <div class="tab-content" id="puestos">
+          <h2>Modificar Puestos de Jefes</h2>
+          <div id="lista-puestos"></div>
+        </div>
+
+        <!-- Límites de Permisos -->
+        <div class="tab-content" id="limites">
+          <h2>Límites por Tipo de Permiso</h2>
+          <div id="contenedor-limites">
+            <label>Personal: <input type="number" id="limite-personal" /></label><br>
+            <label>Salud: <input type="number" id="limite-salud" /></label><br>
+            <label>Sindical: <input type="number" id="limite-sindical" /></label><br>
+            <label>Parcial: <input type="number" id="limite-parcial" /></label><br>
+          </div>
+          <button id="guardar-limites">Guardar Límites</button>
+        </div>
+      </div>
     </div>
   </div>
 
   <script type="module" src="../JS/ajustes.js"></script>
 </body>
+
 </html>

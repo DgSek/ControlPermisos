@@ -251,3 +251,40 @@ body, html {
 #modalModificarPermiso button[type="submit"]:hover {
   background-color: #0056b3;
 }
+.indicador {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-left: 8px;
+}
+
+.verde {
+  background-color: #4CAF50;
+}
+
+.naranja {
+  background-color: #FFC107;
+}
+
+.rojo {
+  background-color: #F44336;
+}
+
+.indicadores-globales {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.indicadores-globales span {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+}
+
+.indicadores-globales .indicador {
+  margin-left: 5px;
+}

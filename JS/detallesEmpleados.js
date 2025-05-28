@@ -206,6 +206,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     snap.forEach(doc => contadores[doc.data().tipo_permiso]++);
     return contadores;
   };
+function getColor(usados, tipo) {
+  const limites = {
+    personal: 3,
+    salud: 3,
+    sindical: 5,
+    parcial: 3
+  };
+
+  const limite = limites[tipo.toLowerCase()] || 1;
+  const porcentaje = usados / limite;
+
+  if (porcentaje >= 1) return 'rojo';
+  if (porcentaje >= 0.5) return 'naranja';
+  return 'verde';
+}
 
   const renderEmployee = (empleado, area, depto, permisos) => {
     const fechaIngreso = formatearFecha(empleado.fecha_contratacion);
@@ -215,37 +230,45 @@ document.addEventListener('DOMContentLoaded', async () => {
       : 'https://via.placeholder.com/150';
 
     container.innerHTML = `
-      <div class="detalles-empleados">
-        <div class="encabezado"><h1>Perfil de Empleado</h1></div>
-        <div class="perfil-contenedor">
-          <div class="seccion info-general">
-            <img src="${fotoUrl}" alt="Empleado" class="empleado-foto-grande">
-            <p><strong>Nombre:</strong> ${empleado.nombre}</p>
+  <div class="detalles-empleados">
+    <div class="encabezado"><h1>Perfil de Empleado</h1></div>
+    <div class="perfil-contenedor">
+      <div class="seccion info-general">
+        <img src="${fotoUrl}" alt="Empleado" class="empleado-foto-grande">
+        <p><strong>Nombre:</strong> ${empleado.nombre}</p>
+      </div>
+      <div class="seccion info-secundaria">
+        <div class="info-subseccion">
+          <h2>Información</h2>
+          <p><strong>Área:</strong> ${area}</p>
+          <p><strong>Departamento:</strong> ${depto}</p>
+          <p><strong>Puesto:</strong> ${empleado.puesto}</p>
+          <p><strong>Fecha de ingreso:</strong> ${fechaIngreso}</p>
+        </div>
+        <div class="info-subseccion">
+          <h2>Permisos solicitados <span id="ver-reportes-icon" style="cursor:pointer;">🗂️</span></h2>
+
+          <div class="indicadores-globales">
+            <span>Disponible <span class="indicador verde"></span></span>
+            <span>Advertencia <span class="indicador naranja"></span></span>
+            <span>Límite alcanzado <span class="indicador rojo"></span></span>
           </div>
-          <div class="seccion info-secundaria">
-            <div class="info-subseccion">
-              <h2>Información</h2>
-              <p><strong>Área:</strong> ${area}</p>
-              <p><strong>Departamento:</strong> ${depto}</p>
-              <p><strong>Puesto:</strong> ${empleado.puesto}</p>
-              <p><strong>Fecha de ingreso:</strong> ${fechaIngreso}</p>
-            </div>
-            <div class="info-subseccion">
-              <h2>Permisos solicitados <span id="ver-reportes-icon" style="cursor:pointer;">🗂️</span></h2>
-              <p><strong>Personal:</strong> ${permisos.Personal}</p>
-              <p><strong>Salud:</strong> ${permisos.Salud}</p>
-              <p><strong>Sindical:</strong> ${permisos.Sindical}</p>
-              <p><strong>Parcial:</strong> ${permisos.Parcial}</p>
-            </div>
-            <div class="info-subseccion">
-              <h2>Contacto</h2>
-              <p><strong>Teléfono:</strong> ${empleado.numero_telefono}</p>
-              <p><strong>Correo:</strong> ${empleado.correo}</p>
-            </div>
-          </div>
+
+          <p><strong>Personal:</strong> ${permisos.Personal} <span class="indicador ${getColor(permisos.Personal, 'personal')}"></span></p>
+          <p><strong>Salud:</strong> ${permisos.Salud} <span class="indicador ${getColor(permisos.Salud, 'salud')}"></span></p>
+          <p><strong>Sindical:</strong> ${permisos.Sindical} <span class="indicador ${getColor(permisos.Sindical, 'sindical')}"></span></p>
+          <p><strong>Parcial:</strong> ${permisos.Parcial} <span class="indicador ${getColor(permisos.Parcial, 'parcial')}"></span></p>
+        </div>
+        <div class="info-subseccion">
+          <h2>Contacto</h2>
+          <p><strong>Teléfono:</strong> ${empleado.numero_telefono}</p>
+          <p><strong>Correo:</strong> ${empleado.correo}</p>
         </div>
       </div>
-    `;
+    </div>
+  </div>
+`;
+
 
     document.getElementById('ver-reportes-icon').addEventListener('click', () => {
       document.getElementById('modal-reportes').classList.remove('hidden');
@@ -258,4 +281,38 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
 
   fetchEmployeeData();
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Toggle de menú lateral
+  const toggleDropdown = (dropdown, menu, isOpen) => {
+    dropdown.classList.toggle("open", isOpen);
+    menu.style.height = isOpen ? `${menu.scrollHeight}px` : 0;
+  };
+
+  const closeAllDropdowns = () => {
+    document.querySelectorAll(".dropdown-container.open").forEach(openDropdown => {
+      const menu = openDropdown.querySelector(".dropdown-menu");
+      toggleDropdown(openDropdown, menu, false);
+    });
+  };
+
+  document.querySelectorAll(".sidebar-toggler, .sidebar-menu-button").forEach(button => {
+    button.addEventListener("click", () => {
+      closeAllDropdowns();
+      document.querySelector(".sidebar").classList.toggle("collapsed");
+    });
+  });
+
+  document.querySelectorAll(".dropdown-container").forEach(container => {
+    const toggle = container.querySelector(".dropdown-toggle");
+    const menu = container.querySelector(".dropdown-menu");
+
+    toggle.addEventListener("click", e => {
+      e.preventDefault();
+      const isOpen = container.classList.contains("open");
+      closeAllDropdowns();
+      toggleDropdown(container, menu, !isOpen);
+    });
+  });
 });

@@ -323,4 +323,62 @@ window.addEventListener('DOMContentLoaded', () => {
   inicializarDepartamentos();
   inicializarJefes();
   inicializarPuestos();
+  cargarLimites();
 });
+async function cargarLimites() {
+  const docRef = doc(db, 'limitesPermisos', 'global');
+  const snap = await getDoc(docRef);
+  if (snap.exists()) {
+    const datos = snap.data();
+    document.getElementById('limite-personal').value = datos.personal || '';
+    document.getElementById('limite-salud').value = datos.salud || '';
+    document.getElementById('limite-sindical').value = datos.sindical || '';
+    document.getElementById('limite-parcial').value = datos.parcial || '';
+  }
+}
+
+document.getElementById('guardar-limites').addEventListener('click', async () => {
+  const limites = {
+    personal: parseInt(document.getElementById('limite-personal').value) || 0,
+    salud: parseInt(document.getElementById('limite-salud').value) || 0,
+    sindical: parseInt(document.getElementById('limite-sindical').value) || 0,
+    parcial: parseInt(document.getElementById('limite-parcial').value) || 0,
+  };
+  await setDoc(doc(db, 'limitePermisos', 'global'), limites); // cambio aquí
+  Swal.fire('Límites actualizados correctamente');
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  // Toggle de menú lateral
+  const toggleDropdown = (dropdown, menu, isOpen) => {
+    dropdown.classList.toggle("open", isOpen);
+    menu.style.height = isOpen ? `${menu.scrollHeight}px` : 0;
+  };
+
+  const closeAllDropdowns = () => {
+    document.querySelectorAll(".dropdown-container.open").forEach(openDropdown => {
+      const menu = openDropdown.querySelector(".dropdown-menu");
+      toggleDropdown(openDropdown, menu, false);
+    });
+  };
+
+  document.querySelectorAll(".sidebar-toggler, .sidebar-menu-button").forEach(button => {
+    button.addEventListener("click", () => {
+      closeAllDropdowns();
+      document.querySelector(".sidebar").classList.toggle("collapsed");
+    });
+  });
+
+  document.querySelectorAll(".dropdown-container").forEach(container => {
+    const toggle = container.querySelector(".dropdown-toggle");
+    const menu = container.querySelector(".dropdown-menu");
+
+    toggle.addEventListener("click", e => {
+      e.preventDefault();
+      const isOpen = container.classList.contains("open");
+      closeAllDropdowns();
+      toggleDropdown(container, menu, !isOpen);
+    });
+  });
+});
+
