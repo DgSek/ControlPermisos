@@ -31,6 +31,7 @@ const departmentCodes = {
   'Subdirección de planeación y vinculación': {
     'Subdirección de planeación y vinculación': '01',
     'Departamento de servicios escolares': '02',
+    'Subdirección de planeación y presupuestacion': '03',
     'Departamento de vinculación y extensión': '04',
     'Biblioteca': '05',
     'Médico General': '06',

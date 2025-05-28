@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ajustes del Sistema</title>
+  <link rel="stylesheet" href="../Css/ajustes.css" />
+</head>
+<body>
+  <div class="ajustes-container">
+    <h1>⚙️ Panel de Ajustes</h1>
+
+    <!-- Tabs -->
+    <div class="tabs">
+      <button class="tab active" data-tab="areas">Áreas</button>
+      <button class="tab" data-tab="departamentos">Departamentos</button>
+      <button class="tab" data-tab="jefes">Jefes Inmediatos</button>
+      <button class="tab" data-tab="puestos">Puestos de Jefes</button>
+    </div>
+
+    <!-- Áreas -->
+    <div class="tab-content active" id="areas">
+      <h2>Modificar Áreas</h2>
+      <div id="lista-areas"></div>
+    </div>
+
+    <!-- Departamentos -->
+    <div class="tab-content" id="departamentos">
+      <h2>Modificar Departamentos</h2>
+      <label for="select-area">Selecciona un área:</label>
+      <select id="select-area"></select>
+      <div id="lista-departamentos"></div>
+    </div>
+
+    <!-- Jefes -->
+    <div class="tab-content" id="jefes">
+      <h2>Modificar Jefes Inmediatos</h2>
+      <div id="lista-jefes"></div>
+    </div>
+
+    <!-- Puestos -->
+    <div class="tab-content" id="puestos">
+      <h2>Modificar Puestos de Jefes</h2>
+      <div id="lista-puestos"></div>
+    </div>
+  </div>
+
+  <script type="module" src="../JS/ajustes.js"></script>
+</body>
+</html>
