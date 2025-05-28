@@ -11,8 +11,57 @@ let allEmployees = [];
 let areaMap = {};   // { 'A1': 'Dirección General', ... }
 let deptMap = {};   // { 'A1': { '01': 'Dirección General', ... }, ... }
 let currentEmployeeDocId = null;
-let currentEmpSolicitud = null;
-let archivosAdjuntos = [];
+let currentEmpSolicitud = null; // Almacena el empleado seleccionado para la solicitud
+let archivosAdjuntos = [];     // Almacena los archivos seleccionados en la solicitud
+
+// CONSTANTES DE ÁREAS Y DEPARTAMENTOS
+const areaCodes = {
+  'Dirección General': 'A1',
+  'Subdirección de planeación y vinculación': 'A2',
+  'Subdirección de servicios administrativos': 'A3',
+  'Subdirección académica': 'A4',
+  'Docentes': 'A5'
+};
+
+const departmentCodes = {
+  'Dirección General': {
+    'Dirección General': '01',
+    'Innovación y calidad': '02',
+  },
+  'Subdirección de planeación y vinculación': {
+    'Subdirección de planeación y vinculación': '01',
+    'Departamento de servicios escolares': '02',
+    'Departamento de vinculación y extensión': '04',
+    'Biblioteca': '05',
+    'Médico General': '06',
+  },
+  'Subdirección de servicios administrativos': {
+    'Subdirección de servicios administrativos': '01',
+    'Departamento de recursos financieros': '02',
+    'Departamento de recursos humanos': '03',
+    'Departamento del centro de cómputo': '04',
+    'Laboratorio': '05',
+    'Departamento de recursos materiales y servicios generales': '06',
+    'Archivos generales': '07',
+    'Mantenimiento e intendencia': '08',
+    'Vigilante': '09',
+  },
+  'Subdirección académica': {
+    'Subdirección académica': '01',
+    'Jefes de división': '02',
+    'Departamento de psicología': '03',
+    'Trabajo social': '04',
+    'Laboratorios': '05',
+  },
+  'Docentes': {
+    'Ingeniería Industrial': '01',
+    'Lic. Administración': '02',
+    'Ing. Sistemas computacionales': '03',
+    'Ing. Civil': '04',
+    'Extraescolares': '05',
+    'Coordinación de lenguas': '06',
+  },
+};
 
 // ELEMENTOS DEL DOM
 const employeesContainer = document.getElementById('employeesContainer');
