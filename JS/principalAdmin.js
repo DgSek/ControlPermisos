@@ -455,114 +455,113 @@ async function fetchJefesYPuestos() {
 
 // --- EVENTOS DE INICIALIZACIÓN ---
 document.addEventListener('DOMContentLoaded', async () => {
-
-  // Inicializar el select de áreas para el modal de empleado
-  if (document.getElementById('areaSeleccionada')) {
-    populateAreaSelect();
+  // ————————————————————————————————————————————————————————
+  // 1) Función auxiliar (POPULATE SELECT) – debe existir siempre
+  // ————————————————————————————————————————————————————————
+  function populateSelect(selectId, options) {
+    const sel = document.getElementById(selectId);
+    if (!sel) return;
+    sel.innerHTML = '<option value="">Selecciona</option>';
+    options.forEach(opt => {
+      const o = document.createElement('option');
+      o.value = opt;
+      o.textContent = opt;
+      sel.appendChild(o);
+    });
   }
 
+  // ————————————————————————————————————————————————————————
+  // 2) Mapeos y fetch inicial de datos
+  // ————————————————————————————————————————————————————————
+  if (document.getElementById('areaSeleccionada')) populateAreaSelect();
   await fetchAreaMap();
   await fetchDeptMap();
   await fetchAllEmployees();
 
-  // Configurar búsqueda en el listado
-  const searchInput = document.getElementById('searchInput');
+  // ————————————————————————————————————————————————————————
+  // 3) BÚSQUEDA
+  // ————————————————————————————————————————————————————————
+  const searchInput  = document.getElementById('searchInput');
   const searchButton = document.getElementById('searchButton');
   searchInput.addEventListener('input', handleSearch);
   searchButton.addEventListener('click', handleSearch);
 
-  // Configurar cambio de área en el modal de empleado
-  const selectAreaModal = document.getElementById('areaSeleccionada');
-  if (selectAreaModal) {
-    selectAreaModal.addEventListener('change', actualizarDepartamentoModal);
-  }
-
-  // Configurar eventos del sidebar y dropdowns
-  document.querySelectorAll(".sidebar-toggler, .sidebar-menu-button").forEach((button) => {
-    button.addEventListener("click", () => {
+  // ————————————————————————————————————————————————————————
+  // 4) SIDEBAR y DROPDOWNS
+  // ————————————————————————————————————————————————————————
+  document.querySelectorAll(".sidebar-toggler, .sidebar-menu-button")
+    .forEach(btn => btn.addEventListener("click", () => {
       closeAllDropdowns();
       document.querySelector(".sidebar").classList.toggle("collapsed");
-    });
-  });
-  document.querySelectorAll(".dropdown-toggle").forEach((dropdownToggle) => {
-    dropdownToggle.addEventListener("click", (e) => {
+    }));
+  document.querySelectorAll(".dropdown-toggle").forEach(toggle => {
+    toggle.addEventListener("click", e => {
       e.preventDefault();
-      const dropdown = dropdownToggle.closest(".dropdown-container");
-      const menu = dropdown.querySelector(".dropdown-menu");
-      const isOpen = dropdown.classList.contains("open");
+      const cont = toggle.closest(".dropdown-container");
+      const menu = cont.querySelector(".dropdown-menu");
       closeAllDropdowns();
-      toggleDropdown(dropdown, menu, !isOpen);
+      toggleDropdown(cont, menu, !cont.classList.contains("open"));
     });
   });
   if (window.innerWidth <= 1024) {
     document.querySelector(".sidebar").classList.add("collapsed");
   }
 
-  // --- FUNCIONALIDAD DE SOLICITUD DE PERMISO ---
-  // Función auxiliar para poblar selects con opciones
-  const populateSelect = (selectId, options) => {
-    const select = document.getElementById(selectId);
-    if (select) {
-      select.innerHTML = '<option value="">Selecciona</option>';
-      options.forEach(opt => {
-        const option = document.createElement('option');
-        option.value = opt;
-        option.textContent = opt;
-        select.appendChild(option);
-      });
-    }
-  };
-
+  // ————————————————————————————————————————————————————————
+  // 5) JEFES y PUESTOS
+  // ————————————————————————————————————————————————————————
   const { jefes, puestos } = await fetchJefesYPuestos();
   populateSelect('nombreJefe', jefes);
   populateSelect('puestoJefe', puestos);
   populateSelect('jefeAutoriza', jefes);
   populateSelect('puestoJefeAutoriza', puestos);
 
-
-  // Configurar el input de archivos adjuntos en la solicitud
+  // ————————————————————————————————————————————————————————
+  // 6) ARCHIVOS ADJUNTOS
+  // ————————————————————————————————————————————————————————
   const fileInput = document.getElementById('fileAdjuntos');
   if (fileInput) {
-    fileInput.addEventListener('change', (event) => {
-      const files = Array.from(event.target.files);
-      archivosAdjuntos = archivosAdjuntos.concat(files);
+    fileInput.addEventListener('change', e => {
+      archivosAdjuntos = archivosAdjuntos.concat(Array.from(e.target.files));
       mostrarListaArchivos();
     });
-
   }
 
-  // Configurar el input de "horas de la falta"
-  const horasFaltaInput = document.getElementById('horasFalta');
-  if (horasFaltaInput) {
-    horasFaltaInput.addEventListener('input', (e) => {
-      let input = e.target.value;
-      if (input.length === 2 || input.length === 8) {
-        input += ":";
-      }
-      if (input.length === 5) {
-        input += "-";
-      }
-      const regex = /^[0-9:-]*$/;
-      if (regex.test(input)) {
-        e.target.value = input;
-      }
-    });
-  }
-
-  // Habilitar/deshabilitar el campo "horasFalta" según el tipo de permiso
+  // ————————————————————————————————————————————————————————
+  // 7) HORAS DE LA FALTA (único campo)
+  // ————————————————————————————————————————————————————————
+  const horasFaltaInput   = document.getElementById('horasFalta');
   const tipoPermisoSelect = document.getElementById('tipoPermiso');
-  if (tipoPermisoSelect && horasFaltaInput) {
-    tipoPermisoSelect.addEventListener('change', (e) => {
-      const selectedTipo = e.target.value;
-      if (selectedTipo !== "Parcial") {
-        horasFaltaInput.value = "";
-        horasFaltaInput.disabled = true;
+
+  if (horasFaltaInput) {
+    // a) formateo automático a HH:mm-HH:mm
+    horasFaltaInput.addEventListener('input', e => {
+      let d = e.target.value.replace(/\D/g, '').slice(0,8);
+      let out = '';
+
+      if (d.length <= 4) {
+        out = d.length >= 2 ? d.slice(0,2)+':'+d.slice(2) : d;
       } else {
-        horasFaltaInput.disabled = false;
+        const a = d.slice(0,4), b = d.slice(4);
+        const p1 = a.slice(0,2)+':'+a.slice(2);
+        const p2 = b.length >= 2 ? b.slice(0,2)+':'+b.slice(2) : b;
+        out = p1+'-'+p2;
       }
+
+      e.target.value = out;
     });
+
+    // b) habilitar/deshabilitar según el select
+    if (tipoPermisoSelect) {
+      tipoPermisoSelect.addEventListener('change', e => {
+        const parcial = e.target.value === 'Parcial';
+        horasFaltaInput.disabled = !parcial;
+        if (!parcial) horasFaltaInput.value = '';
+      });
+    }
   }
 });
+
 function fileToBase64(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();

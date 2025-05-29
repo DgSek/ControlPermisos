@@ -12,7 +12,7 @@ body, html {
   overflow-x: hidden;
 }
 
-/* === CONTENEDORES === */
+/* === CONTENEDORES PRINCIPALES === */
 .detalles-empleados {
   background-color: #f8f9fa;
   min-height: 100vh;
@@ -37,15 +37,15 @@ body, html {
   margin: 0 auto;
 }
 
+/* === SECCIONES DE INFO === */
 .info-general {
-  background-color: #ffffff;
+  background-color: #fff;
   border-radius: 10px;
   padding: 20px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   text-align: center;
   grid-column: span 3;
 }
-
 .info-general img {
   width: 150px;
   height: 150px;
@@ -53,7 +53,6 @@ body, html {
   object-fit: cover;
   margin-bottom: 10px;
 }
-
 .info-general p {
   font-size: 18px;
   font-weight: bold;
@@ -65,22 +64,18 @@ body, html {
   flex-wrap: wrap;
   gap: 20px;
   grid-column: span 3;
-  align-items: stretch;
 }
-
 .info-subseccion {
   flex: 1 1 calc(33.33% - 20px);
   max-width: calc(33.33% - 20px);
-  background-color: #ffffff;
+  background-color: #fff;
   border-radius: 10px;
   padding: 15px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  box-sizing: border-box;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
-
 .info-subseccion h2 {
   font-size: 18px;
   color: #4a90e2;
@@ -89,15 +84,15 @@ body, html {
   margin-bottom: 10px;
   text-align: center;
 }
-
 .info-subseccion p {
   font-size: 16px;
   margin: 5px 0;
 }
 
+/* === BOTÓN SOLICITAR PERMISO === */
 .btn-solicitar-permiso {
   background-color: #4a90e2;
-  color: white;
+  color: #fff;
   padding: 12px 24px;
   font-size: 18px;
   border: none;
@@ -108,7 +103,6 @@ body, html {
   align-self: center;
   transition: background-color 0.3s ease;
 }
-
 .btn-solicitar-permiso:hover {
   background-color: #357ab8;
 }
@@ -119,40 +113,28 @@ body, html {
     grid-template-columns: 1fr;
     gap: 10px;
   }
-
-  .info-general {
-    grid-column: span 1;
-  }
-
-  .btn-solicitar-permiso {
-    grid-column: span 1;
-  }
-
+  .info-general { grid-column: span 1; }
+  .btn-solicitar-permiso { grid-column: span 1; }
   .info-subseccion {
     flex: 1 1 100%;
     max-width: 100%;
   }
 }
-
 @media (max-width: 1024px) {
   .info-subseccion {
     flex: 1 1 calc(50% - 20px);
     max-width: calc(50% - 20px);
   }
 }
-
 @media (max-width: 600px) {
-  .info-secundaria {
-    flex-direction: column;
-  }
-
+  .info-secundaria { flex-direction: column; }
   .info-subseccion {
     flex: 1 1 100%;
     max-width: 100%;
   }
 }
 
-/* === MODALES === */
+/* === MODAL DE REPORTES === */
 .modal {
   position: fixed;
   top: 0; left: 0;
@@ -163,7 +145,6 @@ body, html {
   justify-content: center;
   z-index: 1000;
 }
-
 .modal-content {
   background: #fff;
   padding: 30px 35px;
@@ -175,82 +156,29 @@ body, html {
   overflow-y: auto;
   max-height: 90vh;
 }
-
 .close-button {
   position: absolute;
-  top: 15px;
-  right: 20px;
+  top: 15px; right: 20px;
   font-size: 24px;
   font-weight: bold;
   cursor: pointer;
 }
+.close-button:hover { color: #000; }
 
-.close-button:hover {
-  color: #000;
-}
-
+/* === UTILIDADES === */
 .hidden {
-  display: none;
+  display: none !important;
 }
-
 .reporte-item {
   border: 1px solid #ccc;
   padding: 10px;
   margin: 10px 0;
 }
-
 .reporte-item button {
   margin-right: 10px;
 }
 
-/* === FORMULARIO DE MODIFICACIÓN === */
-#modalModificarPermiso form {
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-}
-
-#modalModificarPermiso .form-group {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 20px;
-}
-
-#modalModificarPermiso .form-group > div {
-  flex: 1;
-  min-width: 200px;
-}
-
-#modalModificarPermiso label {
-  font-weight: bold;
-  display: block;
-  margin-bottom: 5px;
-}
-
-#modalModificarPermiso input,
-#modalModificarPermiso select {
-  width: 100%;
-  padding: 10px;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-}
-
-#modalModificarPermiso button[type="submit"] {
-  background-color: #007BFF;
-  color: white;
-  border: none;
-  padding: 10px 20px;
-  font-weight: bold;
-  font-size: 16px;
-  border-radius: 6px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-#modalModificarPermiso button[type="submit"]:hover {
-  background-color: #0056b3;
-}
+/* === INDICADORES === */
 .indicador {
   display: inline-block;
   width: 12px;
@@ -258,19 +186,9 @@ body, html {
   border-radius: 50%;
   margin-left: 8px;
 }
-
-.verde {
-  background-color: #4CAF50;
-}
-
-.naranja {
-  background-color: #FFC107;
-}
-
-.rojo {
-  background-color: #F44336;
-}
-
+.verde  { background-color: #4CAF50; }
+.naranja { background-color: #FFC107; }
+.rojo   { background-color: #F44336; }
 .indicadores-globales {
   display: flex;
   gap: 15px;
@@ -278,13 +196,121 @@ body, html {
   align-items: center;
   justify-content: center;
 }
-
 .indicadores-globales span {
   display: flex;
   align-items: center;
   font-size: 14px;
 }
-
 .indicadores-globales .indicador {
   margin-left: 5px;
+}
+
+/* === MODAL “Modificar Permiso” === */
+/* 1) Wrapper oculto */
+#modalModificarPermiso {
+  display: none;
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0,0,0,0.5);
+  z-index: 1001;
+}
+/* 1b) Mostrar cuando no tenga .hidden */
+#modalModificarPermiso:not(.hidden) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+/* 2) Contenido */
+#modalModificarPermiso .custom-modal-content {
+  background: #fff;
+  padding: 30px 35px;
+  border-radius: 10px;
+  width: 80%;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  position: relative;
+}
+/* 3) Cruz de cierre */
+#modalModificarPermiso .custom-close {
+  position: absolute;
+  top: 15px; right: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+}
+#modalModificarPermiso .custom-close:hover { color: #000; }
+
+/* === FORMULARIO COMO GRID === */
+#form-modificar-permiso {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem 1rem; /* reducido */
+  margin-top: 1rem;
+}
+/* Cada grupo (label + control) */
+#form-modificar-permiso .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+/* Fila de 3 campos full-width */
+#form-modificar-permiso .form-group.three-cols {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem 1rem; /* reducido */
+}
+/* Filas full-width */
+#form-modificar-permiso .form-group.full-width {
+  grid-column: 1 / -1;
+}
+/* Contenedor de botón */
+#form-modificar-permiso .button-container {
+  grid-column: 1 / -1;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+}
+
+/* === ESTILO COMPACTO DE CAMPOS === */
+#modalModificarPermiso .form-permiso input,
+#modalModificarPermiso .form-permiso select {
+  width: 100%;
+  padding: 0.5rem 0.75rem;  /* reducido */
+  font-size: 0.9rem;        /* reducido */
+  line-height: 1.2;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background-color: #fff;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+  transition: border-color 0.2s;
+}
+#modalModificarPermiso .form-permiso input:focus,
+#modalModificarPermiso .form-permiso select:focus {
+  border-color: #007bff;
+  outline: none;
+}
+/* Inputs date/time más compactos */
+#modalModificarPermiso .form-permiso input[type="date"],
+#modalModificarPermiso .form-permiso input[type="time"] {
+  height: 2rem;          /* reducido */
+  padding: 0 0.75rem;
+}
+
+/* === BOTÓN “Guardar” === */
+#modalModificarPermiso .button-container button[type="submit"] {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+#modalModificarPermiso .button-container button[type="submit"]:hover {
+  background-color: #0056b3;
 }

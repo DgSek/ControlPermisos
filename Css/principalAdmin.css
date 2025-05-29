@@ -325,14 +325,14 @@ body, html {
 #formEmpleado {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: 5px;
 }
 
 /* RE-ESTILO FORM EMPLEADO: grid de 2 columnas */
 #modalEmpleado #formEmpleado {
   display: grid !important;
   grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
+  gap: 5px;
 }
 
 /* Cada campo */
