@@ -133,3 +133,20 @@
     max-width: 100%;
   }
 }
+.indicador {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-left: 5px;
+}
+
+.indicador.verde { background-color: #28a745; }
+.indicador.naranja { background-color: #ffc107; }
+.indicador.rojo { background-color: #dc3545; }
+
+.indicadores-globales {
+  display: flex;
+  gap: 15px;
+  margin: 8px 0 15px;
+}

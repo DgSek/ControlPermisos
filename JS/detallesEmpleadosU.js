@@ -6,189 +6,135 @@ document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('detalles-empleados-container');
   container.innerHTML = `<p>Cargando información del empleado...</p>`;
 
-  // Se obtiene el id_usuario desde la query string, ej: ?id_usuario=123
   const id_usuario = localStorage.getItem('idUsuario');
+  if (!id_usuario) return container.innerHTML = `<p>ID de usuario no proporcionado.</p>`;
 
-
-
-  if (!id_usuario) {
-    container.innerHTML = `<p>ID de usuario no proporcionado.</p>`;
-    return;
-  }
-
-  // Función principal para obtener y renderizar la información del empleado
   async function fetchEmployeeData() {
     try {
-      const qEmpleados = query(
-        collection(db, 'empleados'),
-        where('id_usuario', '==', id_usuario)
-      );
-      const querySnapshotEmpleados = await getDocs(qEmpleados);
-      if (querySnapshotEmpleados.empty) {
-        container.innerHTML = `<p>No se encontró información del empleado.</p>`;
-        return;
-      }
-      const empleadoData = querySnapshotEmpleados.docs[0].data();
+      const qEmpleados = query(collection(db, 'empleados'), where('id_usuario', '==', id_usuario));
+      const snapshot = await getDocs(qEmpleados);
+      if (snapshot.empty) return container.innerHTML = `<p>No se encontró información del empleado.</p>`;
 
-      // Obtener nombres de área y departamento
-      const areaNombre = await fetchAreaNombre(empleadoData.Area);
-      const departamentoNombre = await fetchDepartamentoNombre(empleadoData.Area, empleadoData.Departamento);
-
-      // Contar permisos solicitados por tipo
+      const empleado = snapshot.docs[0].data();
+      const areaNombre = await fetchAreaNombre(empleado.Area);
+      const departamentoNombre = await fetchDepartamentoNombre(empleado.Area, empleado.Departamento);
       const contadores = await contarSolicitud(id_usuario);
+      const limites = await fetchLimites();
 
-      renderEmployee(empleadoData, areaNombre, departamentoNombre, contadores);
+      renderEmployee(empleado, areaNombre, departamentoNombre, contadores, limites);
     } catch (error) {
-      console.error("Error al obtener datos del empleado:", error);
+      console.error("Error al obtener datos:", error);
       container.innerHTML = `<p>Error al obtener información del empleado.</p>`;
     }
   }
 
-  // Función para obtener el nombre del área consultando el documento 'areas/doc'
   async function fetchAreaNombre(areaId) {
     try {
-      const areaDoc = await getDoc(doc(db, 'areas', 'doc'));
-      if (areaDoc.exists()) {
-        const areaData = areaDoc.data();
-        const nombreArea = Object.keys(areaData).find(key => areaData[key] === areaId);
-        return nombreArea || "No disponible";
+      const docSnap = await getDoc(doc(db, 'areas', 'doc'));
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        return Object.keys(data).find(key => data[key] === areaId) || "No disponible";
       }
-    } catch (error) {
-      console.error("Error al obtener el nombre del área:", error);
-    }
+    } catch (e) { console.error("Área:", e); }
     return "No disponible";
   }
 
-  // Función para obtener el nombre del departamento según el área y departamento
   async function fetchDepartamentoNombre(areaId, departamentoId) {
     try {
-      let nombreDepartamento = "No disponible";
-      if (areaId === "A4") {
-        // Caso especial para área "A4"
-        const docenteDoc = await getDoc(doc(db, 'departamentos', areaId, 'Docentes', 'A5'));
-        if (docenteDoc.exists()) {
-          const docenteData = docenteDoc.data();
-          nombreDepartamento = Object.keys(docenteData).find(key => docenteData[key] === departamentoId) || "No disponible";
-        }
-      } else {
-        const departamentoDoc = await getDoc(doc(db, 'departamentos', areaId));
-        if (departamentoDoc.exists()) {
-          const departamentoData = departamentoDoc.data();
-          nombreDepartamento = Object.keys(departamentoData).find(key => departamentoData[key] === departamentoId) || "No disponible";
-        }
+      const docRef = areaId === "A4"
+        ? doc(db, 'departamentos', areaId, 'Docentes', 'A5')
+        : doc(db, 'departamentos', areaId);
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        return Object.keys(data).find(key => data[key] === departamentoId) || "No disponible";
       }
-      return nombreDepartamento;
-    } catch (error) {
-      console.error("Error al obtener el nombre del departamento:", error);
-    }
+    } catch (e) { console.error("Departamento:", e); }
     return "No disponible";
   }
 
-  // Función para contar los permisos solicitados por tipo
   async function contarSolicitud(id_usuario) {
+    const contadores = { Personal: 0, Salud: 0, Sindical: 0, Parcial: 0 };
     try {
-      const qSolicitudes = query(
-        collection(db, 'solicitud'),
-        where('id_usuario', '==', id_usuario)
-      );
-      const querySnapshotSolicitud = await getDocs(qSolicitudes);
-      const contadores = { Personal: 0, Salud: 0, Sindical: 0, Parcial: 0 };
-      querySnapshotSolicitud.forEach(docSnap => {
-        const data = docSnap.data();
-        if (contadores[data.tipo_permiso] !== undefined) {
-          contadores[data.tipo_permiso]++;
-        }
+      const q = query(collection(db, 'solicitud'), where('id_usuario', '==', id_usuario));
+      const snapshot = await getDocs(q);
+      snapshot.forEach(doc => {
+        const tipo = doc.data().tipo_permiso;
+        if (contadores[tipo] !== undefined) contadores[tipo]++;
       });
-      return contadores;
-    } catch (error) {
-      console.error("Error al contar solicitudes:", error);
-      return { Personal: 0, Sindical: 0, Parcial: 0 };
-    }
+    } catch (e) { console.error("Solicitudes:", e); }
+    return contadores;
   }
 
-  // Función para renderizar la información del empleado en el DOM
-  function renderEmployee(empleado, areaNombre, departamentoNombre, contadores) {
-    const defaultImage = 'ruta/a/imagen/predeterminada.jpg';
-    const fechaIngreso = empleado.fecha_contratacion
-      ? new Date(empleado.fecha_contratacion.seconds * 1000).toLocaleDateString()
-      : "No disponible";
+  async function fetchLimites() {
+    try {
+      const docSnap = await getDoc(doc(db, 'limitePermisos', 'global'));
+      if (docSnap.exists()) return docSnap.data();
+    } catch (e) { console.error("Límites:", e); }
+    return { personal: 3, salud: 3, sindical: 3, parcial: 3 }; // fallback
+  }
 
-    container.innerHTML = `
-      <div class="detalles-empleados">
-        <div class="encabezado">
-          <h1>Perfil de Empleado</h1>
+
+
+  function renderEmployee(empleado, areaNombre, departamentoNombre, contadores, limites) {
+  const defaultImage = 'ruta/a/imagen/predeterminada.jpg';
+  const fechaIngreso = empleado.fecha_contratacion
+    ? new Date(empleado.fecha_contratacion.seconds * 1000).toLocaleDateString()
+    : "No disponible";
+
+  // Función para obtener clase de color
+  const getColorClass = (cantidad, limite) => {
+    const ratio = cantidad / limite;
+    if (ratio >= 1) return 'rojo';
+    if (ratio >= 0.5) return 'naranja';
+    return 'verde';
+  };
+
+  const personalColor = getColorClass(contadores.Personal, limites.personal);
+  const saludColor = getColorClass(contadores.Salud, limites.salud);
+  const sindicalColor = getColorClass(contadores.Sindical, limites.sindical);
+  const parcialColor = getColorClass(contadores.Parcial, limites.parcial);
+
+  document.getElementById('detalles-empleados-container').innerHTML = `
+    <div class="detalles-empleados">
+      <div class="encabezado"><h1>Perfil de Empleado</h1></div>
+      <div class="perfil-contenedor">
+        <div class="seccion info-general">
+          <img src="${empleado.Foto || defaultImage}" alt="Foto" class="empleado-foto-grande">
+          <p><strong>Nombre:</strong> ${empleado.nombre || "No disponible"}</p>
         </div>
-        <div class="perfil-contenedor">
-          <div class="seccion info-general">
-            <h2>Información general</h2>
-            <div class="info-item">
-              <img src="${empleado.Foto || defaultImage}" alt="Foto del Empleado" class="empleado-foto-grande">
-              <p class="empleado-nombre"><strong>Nombre:</strong> ${empleado.nombre || "No disponible"}</p>
-            </div>
+        <div class="seccion info-secundaria">
+          <div class="info-subseccion">
+            <h2>Información</h2>
+            <p><strong>Área:</strong> ${areaNombre}</p>
+            <p><strong>Departamento:</strong> ${departamentoNombre}</p>
+            <p><strong>Puesto:</strong> ${empleado.puesto || "No disponible"}</p>
+            <p><strong>Fecha de Ingreso:</strong> ${fechaIngreso}</p>
           </div>
-          <div class="seccion info-secundaria">
-            <div class="info-subseccion">
-              <h2>Información</h2>
-              <p><strong>Área:</strong> ${areaNombre}</p>
-              <p><strong>Departamento:</strong> ${departamentoNombre}</p>
-              <p><strong>Puesto:</strong> ${empleado.puesto || "No disponible"}</p>
-              <p><strong>Fecha de Ingreso:</strong> ${fechaIngreso}</p>
-            </div>
-            <div class="info-subseccion">
+          <div class="info-subseccion">
             <h2>Permisos solicitados</h2>
-              <p><strong>Personal:</strong> ${contadores.Personal}</p>
-              <p><strong>Salud:</strong> ${contadores.Salud}</p>
-              <p><strong>Sindical:</strong> ${contadores.Sindical}</p>
-              <p><strong>Parcial:</strong> ${contadores.Parcial}</p>
+            <div class="indicadores-globales">
+              <span>Disponible <span class="indicador verde"></span></span>
+              <span>Advertencia <span class="indicador naranja"></span></span>
+              <span>Límite <span class="indicador rojo"></span></span>
             </div>
-            <div class="info-subseccion">
-              <h2>Información de contacto</h2>
-              <p><strong>Teléfono:</strong> ${empleado.numero_telefono || "No disponible"}</p>
-              <p><strong>Correo electrónico:</strong> ${empleado.correo || "No disponible"}</p>
-            </div>
-            <a href="/mnt/data/FORMATO-NVOPERMISO-2024.pdf" download="FORMATO-NVOPERMISO-2024.pdf" class="btn-solicitar-permiso">
-              Descargar Formato de Permiso
-            </a>
+            <p><strong>Personal:</strong> ${contadores.Personal} <span class="indicador ${personalColor}"></span></p>
+            <p><strong>Salud:</strong> ${contadores.Salud} <span class="indicador ${saludColor}"></span></p>
+            <p><strong>Sindical:</strong> ${contadores.Sindical} <span class="indicador ${sindicalColor}"></span></p>
+            <p><strong>Parcial:</strong> ${contadores.Parcial} <span class="indicador ${parcialColor}"></span></p>
           </div>
+          <div class="info-subseccion">
+            <h2>Contacto</h2>
+            <p><strong>Teléfono:</strong> ${empleado.numero_telefono || "No disponible"}</p>
+            <p><strong>Correo:</strong> ${empleado.correo || "No disponible"}</p>
+          </div>
+          <a href="/mnt/data/FORMATO-NVOPERMISO-2024.pdf" download class="btn-solicitar-permiso">Descargar Formato de Permiso</a>
         </div>
       </div>
-    `;
-  }
+    </div>
+  `;
+}
 
-  // Ejecutar la función principal para cargar y renderizar la información del empleado
+
   fetchEmployeeData();
-});
-
-document.addEventListener("DOMContentLoaded", () => {
-  // Toggle de menú lateral
-  const toggleDropdown = (dropdown, menu, isOpen) => {
-    dropdown.classList.toggle("open", isOpen);
-    menu.style.height = isOpen ? `${menu.scrollHeight}px` : 0;
-  };
-
-  const closeAllDropdowns = () => {
-    document.querySelectorAll(".dropdown-container.open").forEach(openDropdown => {
-      const menu = openDropdown.querySelector(".dropdown-menu");
-      toggleDropdown(openDropdown, menu, false);
-    });
-  };
-
-  document.querySelectorAll(".sidebar-toggler, .sidebar-menu-button").forEach(button => {
-    button.addEventListener("click", () => {
-      closeAllDropdowns();
-      document.querySelector(".sidebar").classList.toggle("collapsed");
-    });
-  });
-
-  document.querySelectorAll(".dropdown-container").forEach(container => {
-    const toggle = container.querySelector(".dropdown-toggle");
-    const menu = container.querySelector(".dropdown-menu");
-
-    toggle.addEventListener("click", e => {
-      e.preventDefault();
-      const isOpen = container.classList.contains("open");
-      closeAllDropdowns();
-      toggleDropdown(container, menu, !isOpen);
-    });
-  });
 });

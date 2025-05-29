@@ -206,28 +206,32 @@ document.addEventListener('DOMContentLoaded', async () => {
     snap.forEach(doc => contadores[doc.data().tipo_permiso]++);
     return contadores;
   };
-function getColor(usados, tipo) {
-  const limites = {
-    personal: 3,
-    salud: 3,
-    sindical: 5,
-    parcial: 3
-  };
+  async function getColor(usados, tipo) {
+    try {
+      const snap = await getDoc(doc(db, 'limitePermisos', 'global'));
+      const limites = snap.exists() ? snap.data() : {};
+      const limite = limites[tipo.toLowerCase()] || 1;
+      const porcentaje = usados / limite;
+      if (porcentaje >= 1) return 'rojo';
+      if (porcentaje >= 0.5) return 'naranja';
+      return 'verde';
+    } catch (e) {
+      console.error("Error al obtener límites:", e);
+      return 'verde';
+    }
+  }
 
-  const limite = limites[tipo.toLowerCase()] || 1;
-  const porcentaje = usados / limite;
 
-  if (porcentaje >= 1) return 'rojo';
-  if (porcentaje >= 0.5) return 'naranja';
-  return 'verde';
-}
-
-  const renderEmployee = (empleado, area, depto, permisos) => {
+  const renderEmployee = async (empleado, area, depto, permisos) => {
     const fechaIngreso = formatearFecha(empleado.fecha_contratacion);
     const fotoCruda = empleado.Foto || empleado.foto || '';
     const fotoUrl = (typeof fotoCruda === 'string' && fotoCruda.trim().length > 5)
       ? fotoCruda.trim().replace(/^"|"$/g, '') // quita comillas dobles si están incrustadas
       : 'https://via.placeholder.com/150';
+    const personalColor = await getColor(permisos.Personal, 'personal');
+    const saludColor = await getColor(permisos.Salud, 'salud');
+    const sindicalColor = await getColor(permisos.Sindical, 'sindical');
+    const parcialColor = await getColor(permisos.Parcial, 'parcial');
 
     container.innerHTML = `
   <div class="detalles-empleados">
@@ -251,13 +255,14 @@ function getColor(usados, tipo) {
           <div class="indicadores-globales">
             <span>Disponible <span class="indicador verde"></span></span>
             <span>Advertencia <span class="indicador naranja"></span></span>
-            <span>Límite alcanzado <span class="indicador rojo"></span></span>
+            <span>Límite <span class="indicador rojo"></span></span>
           </div>
 
-          <p><strong>Personal:</strong> ${permisos.Personal} <span class="indicador ${getColor(permisos.Personal, 'personal')}"></span></p>
-          <p><strong>Salud:</strong> ${permisos.Salud} <span class="indicador ${getColor(permisos.Salud, 'salud')}"></span></p>
-          <p><strong>Sindical:</strong> ${permisos.Sindical} <span class="indicador ${getColor(permisos.Sindical, 'sindical')}"></span></p>
-          <p><strong>Parcial:</strong> ${permisos.Parcial} <span class="indicador ${getColor(permisos.Parcial, 'parcial')}"></span></p>
+          <p><strong>Personal:</strong> ${permisos.Personal} <span class="indicador ${personalColor}"></span></p>
+<p><strong>Salud:</strong> ${permisos.Salud} <span class="indicador ${saludColor}"></span></p>
+<p><strong>Sindical:</strong> ${permisos.Sindical} <span class="indicador ${sindicalColor}"></span></p>
+<p><strong>Parcial:</strong> ${permisos.Parcial} <span class="indicador ${parcialColor}"></span></p>
+
         </div>
         <div class="info-subseccion">
           <h2>Contacto</h2>
