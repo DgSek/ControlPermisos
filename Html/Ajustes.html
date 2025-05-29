@@ -15,13 +15,73 @@
 
     <!-- Sidebar -->
     <aside class="sidebar collapsed">
-      <!-- ... tu código de sidebar ... -->
+      <header class="sidebar-header">
+        <a href="#" class="header-logo">
+          <img src="../Imagenes/logo.png" alt="Logo" />
+        </a>
+        <button class="sidebar-toggler">
+          <span class="material-symbols-rounded">chevron_left</span>
+        </button>
+      </header>
+      <nav class="sidebar-nav">
+        <ul class="nav-list primary-nav">
+          <li class="nav-item">
+            <a href="principalAdmin.html" class="nav-link">
+              <span class="material-symbols-rounded">home</span>
+              <span class="nav-label">Inicio</span>
+            </a>
+          </li>
+          <li class="nav-item dropdown-container">
+            <a href="#" class="nav-link dropdown-toggle">
+              <span class="material-symbols-rounded">support_agent</span>
+              <span class="nav-label">Servicios</span>
+              <span class="dropdown-icon material-symbols-rounded">keyboard_arrow_down</span>
+            </a>
+            <ul class="dropdown-menu">
+              <li class="nav-item">
+                <a href="agregarEmpleado.html" class="nav-link dropdown-link">Agregar empleado</a>
+              </li>
+              <li class="nav-item">
+                <a href="Reporte.html" class="nav-link dropdown-link">Reporte</a>
+              </li>
+            </ul>
+          </li>
+          <li class="nav-item">
+            <a href="preguntasFrecuentes.html" class="nav-link">
+              <span class="material-symbols-rounded">question_mark</span>
+              <span class="nav-label">Preguntas</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="Ajustes.html" class="nav-link">
+              <span class="material-symbols-rounded">settings</span>
+              <span class="nav-label">Ajustes</span>
+            </a>
+          </li>
+        </ul>
+        <ul class="nav-list secondary-nav">
+          <li class="nav-item">
+            <a href="#" class="nav-link">
+              <span class="material-symbols-rounded">help</span>
+              <span class="nav-label">Support</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a href="#" class="nav-link" id="btnCerrarSesion">
+              <span class="material-symbols-rounded">logout</span>
+              <span class="nav-label">Sign Out</span>
+            </a>
+          </li>
+        </ul>
+      </nav>
     </aside>
 
+    <!-- Botón para abrir/cerrar el sidebar (útil en móviles) -->
     <button class="sidebar-menu-button">
       <span class="material-symbols-rounded">menu</span>
     </button>
 
+    <!-- Contenido principal -->
     <div class="content-container">
       <div class="ajustes-container">
         <h1>⚙️ Panel de Ajustes</h1>
